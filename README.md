@@ -65,6 +65,24 @@ Users can register as the following types:
 - **Hospital Verification:** Admin verifies the hospital details. Once verification is complete, the hospital is made public and accessible to patients.
 - **Doctor Verification:** Admin verifies the doctor’s credentials. Doctors cannot be associated with a hospital until they are verified.
 
+
+### 8. **Chatbot Feature**
+- **Predefined Question & Answer Flow:** 
+    - Patients can interact with a chatbot that provides answers to common queries. 
+    - The chatbot is equipped with predefined questions such as:
+        - "How do I book an appointment?"
+        - "What are the hospital's working hours?"
+        - "What types of consultations are available?"
+        - "How can I cancel or reschedule my appointment?"
+    
+    Patients simply select the query they are looking for from a list, and the chatbot will provide the relevant answer.
+
+- **Contact Staff Option:** 
+    - If the patient cannot find an answer through the chatbot, they can select the **'00' option**, which indicates they want to contact a **patient care staff** member for further assistance.
+    - Once the patient selects this option, their details (name, contact info, and query) are sent directly to a patient care professional.
+    - The patient care staff can then follow up and assist the patient as needed.
+
+
 ---
 
 ## Workflow
