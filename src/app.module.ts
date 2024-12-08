@@ -33,7 +33,7 @@ import { AuthModule } from './modules/auth/auth.module';
 import { TwilioModule } from './modules/twilio/twilio.module';
 import { UserService } from './modules/user/user.service';
 import { SeederService } from './modules/seeder/seeder.service';
-import { User , UserSchema} from './modules/user/user.schema';
+import { User, UserSchema } from './modules/user/user.schema';
 
 @Module({
   imports: [
@@ -43,7 +43,7 @@ import { User , UserSchema} from './modules/user/user.schema';
     MongooseModule.forRoot(process.env.MONGODB_URI),
     MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
     AdminModule,
-    PatientModule, 
+    PatientModule,
     HospitalModule,
     DoctorModule,
     JazzcashModule,
@@ -51,7 +51,7 @@ import { User , UserSchema} from './modules/user/user.schema';
     ChatbotModule,
     AppointmentModule,
     AuthModule,
-    TwilioModule
+    TwilioModule,
   ],
   controllers: [
     AdminController,
@@ -77,7 +77,7 @@ import { User , UserSchema} from './modules/user/user.schema';
     TwilioService,
     ResponseHandler,
     UserService,
-    SeederService
+    SeederService,
   ],
 })
 export class AppModule {}

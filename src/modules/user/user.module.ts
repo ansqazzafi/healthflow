@@ -4,7 +4,6 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { ResponseHandler } from 'utility/success-response';
 import { UserService } from './user.service';
 
-
 @Module({
   imports: [
     MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
