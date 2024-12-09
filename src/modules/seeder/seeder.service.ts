@@ -4,12 +4,13 @@ import { Model } from 'mongoose';
 import * as bcrypt from 'bcrypt';
 import { roles } from 'enums/role.enum';
 import { User, UserDocument } from '../user/user.schema';
+import { gender } from 'enums/gender.enum';
 
 @Injectable()
 export class SeederService {
   private readonly logger = new Logger(SeederService.name);
 
-  constructor(@InjectModel(User.name) private userModel: Model<UserDocument>) {}
+  constructor(@InjectModel(User.name) private userModel: Model<UserDocument>) { }
 
   async seed() {
     const admin = await this.userModel.findOne({ email: 'admin@gmail.com' });
@@ -22,6 +23,7 @@ export class SeederService {
         phoneNumber: '1234567890',
         isActive: true,
         role: roles.admin,
+        gender: gender.male,
         address: { country: 'Pakistan', city: 'Gujranwala' },
       });
       this.logger.log('Admin user created successfully');
@@ -40,6 +42,7 @@ export class SeederService {
         password: hashedPassword,
         phoneNumber: '0987654321',
         isActive: true,
+        gender: gender.male,
         role: roles.patientCare,
         address: { country: 'Pakistan', city: 'Lahore' },
       });

@@ -16,8 +16,9 @@ export class Appointment {
   @Prop({
     required: true,
     enum: AppointmentStatus,
+    default:AppointmentStatus.PENDING
   })
-  status: AppointmentStatus;
+  status?: AppointmentStatus;
 
   @Prop({ required: false })
   reason?: string;

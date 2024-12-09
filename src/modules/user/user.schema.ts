@@ -3,7 +3,7 @@ import { roles } from 'enums/role.enum';
 import { address } from 'interfaces/address.interface';
 import { Document, Types } from 'mongoose';
 import { BaseSchema } from '../schema/base.schema';
-
+import { gender } from 'enums/gender.enum';
 @Schema({ timestamps: true })
 export class User extends BaseSchema {
   @Prop({
@@ -29,8 +29,10 @@ export class User extends BaseSchema {
     required: false,
   })
   queries?: { patientId: Types.ObjectId; messageQuery: string }[];
-  @Prop({ required: false, enum: roles, default: roles.patient })
+  @Prop({enum: roles, default: roles.patient })
   role: roles;
+  @Prop({ required: true, enum: gender })
+  gender: gender;
 }
 
 export type UserDocument = User & Document;

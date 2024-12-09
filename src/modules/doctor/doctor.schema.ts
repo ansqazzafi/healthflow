@@ -3,7 +3,7 @@ import { address } from 'interfaces/address.interface';
 import { Document, Types } from 'mongoose';
 import { BaseSchema } from '../schema/base.schema';
 import { Specialty } from 'enums/specialty.enum';
-
+import { gender } from 'enums/gender.enum';
 @Schema({ timestamps: true })
 export class Doctor extends BaseSchema {
   @Prop({
@@ -21,11 +21,24 @@ export class Doctor extends BaseSchema {
   })
   appointmentRecords?: Types.ObjectId[];
 
+
+  @Prop({ required: true })
+  medicalCollege: string;
+
+  @Prop({ required: true })
+  passingYear: Date;
+
+  @Prop({ required: true })
+  degree: string[];
+
+  @Prop({ required: true })
+  degreeId: string;
+
   @Prop({
     type: [{ type: Types.ObjectId, ref: 'Hospital' }],
     required: false,
   })
-  hospitals?: Types.ObjectId[];
+  hospital?: Types.ObjectId[];
 
   @Prop({ required: true, enum: Specialty })
   specialty: Specialty;
@@ -38,6 +51,9 @@ export class Doctor extends BaseSchema {
 
   @Prop({ required: false })
   availableHours?: string[];
+
+  @Prop({ required: true, enum: gender })
+  gender: gender;
 }
 
 export type DoctorDocument = Doctor & Document;
