@@ -2,9 +2,9 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { address } from 'interfaces/address.interface';
 import { Document, Types } from 'mongoose';
 import { BaseSchema } from '../schema/base.schema';
-
+import { roles } from 'enums/role.enum';
 @Schema({ timestamps: true })
-export class Hospital extends BaseSchema{
+export class Hospital extends BaseSchema {
   @Prop({
     required: true,
     type: {
@@ -39,6 +39,9 @@ export class Hospital extends BaseSchema{
 
   @Prop({ required: false })
   biography?: string;
+
+  @Prop({ enum: roles, default: roles.hospital })
+  role: roles;
 }
 
 export type HospitalDocument = Hospital & Document;

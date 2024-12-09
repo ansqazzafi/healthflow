@@ -9,14 +9,8 @@ import { UserService } from './modules/user/user.service';
 import { SeederService } from './modules/seeder/seeder.service';
 import { User, UserSchema } from './modules/user/user.schema';
 import { UserModule } from './modules/user/user.module';
-import { AuthController } from './modules/auth/auth.controller';
-import { DoctorService } from './modules/doctor/doctor.service';
-import { HospitalService } from './modules/hospital/hospital.service';
 import { DoctorModule } from './modules/doctor/doctor.module';
 import { HospitalModule } from './modules/hospital/hospital.module';
-import { AuthService } from './modules/auth/auth.service';
-import { JwtService } from '@nestjs/jwt';
-import { GlobalAuth } from './common/services/global-auth.service';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -30,13 +24,7 @@ import { GlobalAuth } from './common/services/global-auth.service';
     UserModule,
     DoctorModule,
     HospitalModule,
-
   ],
-  providers: [
-    ResponseHandler,
-    // SeederService,
-    // JwtService,
-    // GlobalAuth
-  ],
+  providers: [ResponseHandler, SeederService],
 })
-export class AppModule { }
+export class AppModule {}

@@ -10,7 +10,7 @@ import { gender } from 'enums/gender.enum';
 export class SeederService {
   private readonly logger = new Logger(SeederService.name);
 
-  constructor(@InjectModel(User.name) private userModel: Model<UserDocument>) { }
+  constructor(@InjectModel(User.name) private userModel: Model<UserDocument>) {}
 
   async seed() {
     const admin = await this.userModel.findOne({ email: 'admin@gmail.com' });

@@ -5,7 +5,7 @@ export class BaseSchema {
   @Prop({ required: true })
   name: string;
 
-  @Prop({ required: true , unique:true })
+  @Prop({ required: true, unique: true })
   email: string;
 
   @Prop({ required: true })
@@ -14,14 +14,13 @@ export class BaseSchema {
   @Prop({ required: true, default: false })
   isActive: boolean;
 
-  @Prop({ required: true , unique:true})
+  @Prop({ required: true, unique: true })
   phoneNumber: string;
 
   @Prop({ required: false })
   profilePicture?: string;
 
-
-  @Prop({ required: false , default:false})
+  @Prop({ required: false, default: false })
   isPhoneVerified: boolean;
 
   @Prop({ required: false })

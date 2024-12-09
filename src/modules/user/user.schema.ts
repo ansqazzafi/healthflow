@@ -29,7 +29,7 @@ export class User extends BaseSchema {
     required: false,
   })
   queries?: { patientId: Types.ObjectId; messageQuery: string }[];
-  @Prop({enum: roles, default: roles.patient })
+  @Prop({ enum: roles, default: roles.patient })
   role: roles;
   @Prop({ required: true, enum: gender })
   gender: gender;

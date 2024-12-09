@@ -4,6 +4,7 @@ import { Document, Types } from 'mongoose';
 import { BaseSchema } from '../schema/base.schema';
 import { Specialty } from 'enums/specialty.enum';
 import { gender } from 'enums/gender.enum';
+import { roles } from 'enums/role.enum';
 @Schema({ timestamps: true })
 export class Doctor extends BaseSchema {
   @Prop({
@@ -20,7 +21,6 @@ export class Doctor extends BaseSchema {
     required: false,
   })
   appointmentRecords?: Types.ObjectId[];
-
 
   @Prop({ required: true })
   medicalCollege: string;
@@ -51,6 +51,9 @@ export class Doctor extends BaseSchema {
 
   @Prop({ required: false })
   availableHours?: string[];
+
+  @Prop({ enum: roles, default: roles.doctor })
+  role: roles;
 
   @Prop({ required: true, enum: gender })
   gender: gender;

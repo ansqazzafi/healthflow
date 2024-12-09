@@ -1,17 +1,18 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { Doctor, DoctorSchema } from './doctor.schema';
 import { MongooseModule } from '@nestjs/mongoose';
 import { DoctorService } from './doctor.service';
 import { DoctorController } from './doctor.controller';
 import { ResponseHandler } from 'utility/success-response';
-import { GlobalAuth } from 'src/common/services/global-auth.service';
+import { AuthModule } from '../auth/auth.module';
 MongooseModule;
 @Module({
   imports: [
+    forwardRef(() => AuthModule),
     MongooseModule.forFeature([{ name: Doctor.name, schema: DoctorSchema }]),
   ],
-  providers: [DoctorService, ResponseHandler , GlobalAuth],
+  providers: [DoctorService, ResponseHandler],
   controllers: [DoctorController],
-  exports:[DoctorService]
+  exports: [DoctorService],
 })
 export class DoctorModule {}

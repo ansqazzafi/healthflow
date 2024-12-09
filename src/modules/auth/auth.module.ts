@@ -14,13 +14,18 @@ import { DoctorService } from '../doctor/doctor.service';
 import { HospitalModule } from '../hospital/hospital.module';
 import { DoctorModule } from '../doctor/doctor.module';
 import { JwtService } from '@nestjs/jwt';
-import { GlobalAuth } from 'src/common/services/global-auth.service';
+import { MiddlewareConsumer } from '@nestjs/common';
 @Module({
-    imports: [TwilioModule, HospitalModule, DoctorModule,
-        UserModule
-    ],
-    controllers: [AuthController],
-    providers: [ResponseHandler, AuthService, JwtService, GlobalAuth],
-    exports:[AuthService]
+  imports: [
+    TwilioModule,
+    HospitalModule,
+    DoctorModule,
+    forwardRef(() => UserModule),
+    forwardRef(() => DoctorModule),
+    forwardRef(() => HospitalModule),
+  ],
+  controllers: [AuthController],
+  providers: [ResponseHandler, AuthService, JwtService],
+  exports: [AuthService],
 })
-export class AuthModule { }
+export class AuthModule {}
