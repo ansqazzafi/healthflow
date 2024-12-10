@@ -11,8 +11,6 @@ import { AuthService } from '../auth/auth.service';
 export class DoctorService {
   constructor(
     @InjectModel(Doctor.name) private doctorModel: Model<DoctorDocument>,
-    @Inject(forwardRef(() => AuthService))
-    private readonly authService: AuthService,
   ) {}
   async register(register: RegisterDoctorDTO): Promise<any> {
     try {
@@ -33,46 +31,6 @@ export class DoctorService {
         throw error;
       }
       throw new CustomError('Error during user registration', 500);
-    }
-  }
-
-  public async login(login: any) {
-    try {
-      const doctor = await this.doctorModel.findOne({ email: login.email });
-      if (!doctor) {
-        throw new CustomError('User not found', 404);
-      }
-      const isPasswordCorrect = await bcrypt.compare(
-        login.password,
-        doctor.password,
-      );
-
-      if (!isPasswordCorrect) {
-        throw new CustomError('password didnt matched', 402);
-      }
-
-      const accessToken = await this.authService.generateAccessToken(doctor);
-      const refreshToken = await this.authService.generateRefreshToken(doctor);
-      doctor.refreshToken = refreshToken;
-      await doctor.save();
-
-      const newDoctor = doctor.toObject();
-      const loggedInDoctor = this.authService.removeFields(newDoctor, [
-        'password',
-        'refreshToken',
-      ]);
-
-      return {
-        doctor: loggedInDoctor,
-        accessToken,
-        refreshToken,
-      };
-    } catch (error) {
-      console.error(error);
-      if (error instanceof CustomError) {
-        throw error;
-      }
-      throw new CustomError('Error during user login', 500);
     }
   }
 }

@@ -8,7 +8,6 @@ import { AuthModule } from '../auth/auth.module';
 MongooseModule;
 @Module({
   imports: [
-    forwardRef(() => AuthModule),
     MongooseModule.forFeature([{ name: Doctor.name, schema: DoctorSchema }]),
   ],
   providers: [DoctorService, ResponseHandler],

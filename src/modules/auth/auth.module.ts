@@ -1,4 +1,4 @@
-import { forwardRef, Module } from '@nestjs/common';
+import { forwardRef, Module, NestModule } from '@nestjs/common';
 // import { UserService } from '../user/user.service';
 // import { TwilioService } from '../twilio/twilio.service';
 // import { DoctorService } from '../doctor/doctor.service';
@@ -15,17 +15,23 @@ import { HospitalModule } from '../hospital/hospital.module';
 import { DoctorModule } from '../doctor/doctor.module';
 import { JwtService } from '@nestjs/jwt';
 import { MiddlewareConsumer } from '@nestjs/common';
+import { JwtMiddleware } from 'middlewares/verify-jwt.middlware';
 @Module({
   imports: [
     TwilioModule,
     HospitalModule,
     DoctorModule,
     forwardRef(() => UserModule),
-    forwardRef(() => DoctorModule),
     forwardRef(() => HospitalModule),
   ],
   controllers: [AuthController],
-  providers: [ResponseHandler, AuthService, JwtService],
+  providers: [ResponseHandler, JwtService, AuthService],
   exports: [AuthService],
 })
-export class AuthModule {}
+export class AuthModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer
+      .apply(JwtMiddleware)
+      .forRoutes('auth/logout');
+  }
+}

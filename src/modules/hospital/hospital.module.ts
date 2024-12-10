@@ -13,6 +13,6 @@ import { AuthModule } from '../auth/auth.module';
   ],
   providers: [HospitalService],
   controllers: [HospitalController],
-  exports: [HospitalService],
+  exports: [HospitalService, MongooseModule],
 })
 export class HospitalModule {}

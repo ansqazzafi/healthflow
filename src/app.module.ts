@@ -11,6 +11,7 @@ import { User, UserSchema } from './modules/user/user.schema';
 import { UserModule } from './modules/user/user.module';
 import { DoctorModule } from './modules/doctor/doctor.module';
 import { HospitalModule } from './modules/hospital/hospital.module';
+import { AdminModule } from './modules/admin/admin.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -24,6 +25,7 @@ import { HospitalModule } from './modules/hospital/hospital.module';
     UserModule,
     DoctorModule,
     HospitalModule,
+    AdminModule
   ],
   providers: [ResponseHandler, SeederService],
 })

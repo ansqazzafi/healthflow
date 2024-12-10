@@ -1,7 +1,7 @@
-import * as express from 'express';
-import { User, UserDocument } from './modules/user/user.schema';
-import { Doctor, DoctorDocument } from './modules/doctor/doctor.schema';
-import { Hospital, HospitalDocument } from './modules/hospital/hospital.schema';
+import { UserDocument } from 'src/modules/user/user.schema';
+import { DoctorDocument } from 'src/modules/doctor/doctor.schema';
+import { HospitalDocument } from 'src/modules/hospital/hospital.schema';
+
 declare global {
   namespace Express {
     interface Request {

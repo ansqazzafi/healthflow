@@ -1,10 +1,11 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import * as Twilio from 'twilio';
+import  Twilio from 'twilio';
 import { CustomError } from 'utility/custom-error';
 import * as crypto from 'crypto';  // For generating random verification code
 import { ConfigService } from '@nestjs/config'; // To use environment variables
 import { UserService } from '../user/user.service';
 import { UserModule } from '../user/user.module';
+import { Message } from 'twilio/lib/twiml/MessagingResponse';
 
 @Injectable()
 export class TwilioService {
@@ -24,11 +25,10 @@ export class TwilioService {
     return crypto.randomInt(100000, 999999).toString();  
   }
 
-  async sendVerificationSms(to: string): Promise<string> {
+  async sendVerificationSms(to: string , Message:string): Promise<string> {
     try {
       const verificationCode = this.generateVerificationCode();
-      const message = `Your verification code is: ${verificationCode}`;
-
+      const message = `${Message} ${verificationCode}`;
       const response = await this.twilioClient.messages.create({
         body: message,
         from: this.configService.get<string>('TWILIO_PHONE_NUMBER'),
@@ -36,7 +36,6 @@ export class TwilioService {
       });
       this.verificationCodes.set(to, { code: verificationCode, expiresAt: Date.now() + 10 * 60 * 1000 });
       return verificationCode;
-      
     } catch (error) {
       console.error('Error during sending SMS:', error);
       throw new CustomError('Failed to send verification SMS to receiver', 404);
