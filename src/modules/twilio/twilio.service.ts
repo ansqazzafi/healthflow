@@ -1,5 +1,5 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import  Twilio from 'twilio';
+import Twilio from 'twilio';
 import { CustomError } from 'utility/custom-error';
 import * as crypto from 'crypto';  // For generating random verification code
 import { ConfigService } from '@nestjs/config'; // To use environment variables
@@ -14,7 +14,7 @@ export class TwilioService {
 
   constructor(
     private configService: ConfigService,
-    @Inject(forwardRef(() => UserService))private readonly userService:UserService
+    @Inject(forwardRef(() => UserService)) private readonly userService: UserService
   ) {
     const accountSid = this.configService.get<string>('TWILIO_ACCOUNT_SID');
     const authToken = this.configService.get<string>('TWILIO_AUTH_TOKEN');
@@ -22,10 +22,31 @@ export class TwilioService {
     this.twilioClient = Twilio(accountSid, authToken);
   }
   private generateVerificationCode(): string {
-    return crypto.randomInt(100000, 999999).toString();  
+    return crypto.randomInt(100000, 999999).toString();
   }
 
-  async sendVerificationSms(to: string , Message:string): Promise<string> {
+
+  async sendMessage(to: string, message: string): Promise<any> {
+    try {
+      const response = await this.twilioClient.messages.create({
+        body: message,
+        from: this.configService.get<string>('TWILIO_PHONE_NUMBER'),
+        to,
+      });
+      if (!response) {
+        throw new CustomError("Unable to send message", 401)
+      }
+      return response
+
+    } catch (error) {
+      if (error instanceof CustomError) {
+        throw error
+      }
+      throw new CustomError("Error to sending message", 402)
+    }
+  }
+
+  async sendVerificationSms(to: string, Message: string): Promise<string> {
     try {
       const verificationCode = this.generateVerificationCode();
       const message = `${Message} ${verificationCode}`;
@@ -48,7 +69,7 @@ export class TwilioService {
       throw new CustomError('Verification record not found', 404);
     }
     if (record.code === code && record.expiresAt > Date.now()) {
-      this.verificationCodes.delete(phoneNumber); 
+      this.verificationCodes.delete(phoneNumber);
       return true
     } else {
       throw new CustomError('Invalid or expired verification code', 400);

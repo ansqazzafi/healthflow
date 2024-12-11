@@ -261,7 +261,7 @@ export class AuthService {
           }
           break;
         case roles.hospital:
-          entity = await this.userModel.findOneAndUpdate(
+          entity = await this.hospitalModel.findOneAndUpdate(
             { phoneNumber: phoneNumber },
             { password: newPassword },
             { new: true });

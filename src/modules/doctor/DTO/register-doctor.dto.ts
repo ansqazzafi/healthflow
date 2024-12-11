@@ -53,6 +53,10 @@ export class RegisterDoctorDTO {
     @IsNotEmpty()
     specialty: Specialty;
 
+    @IsString()
+    @IsNotEmpty()
+    degreeId:string
+
     @IsArray()
     @IsOptional() 
     availableDays?: string[];

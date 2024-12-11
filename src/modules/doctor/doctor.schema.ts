@@ -34,11 +34,8 @@ export class Doctor extends BaseSchema {
   @Prop({ required: true })
   degreeId: string;
 
-  @Prop({
-    type: [{ type: Types.ObjectId, ref: 'Hospital' }],
-    required: false,
-  })
-  hospital?: Types.ObjectId[];
+  @Prop({ type: Types.ObjectId, ref: 'Hospital', required: false })
+  hospital?: Types.ObjectId;
 
   @Prop({ required: true, enum: Specialty })
   specialty: Specialty;

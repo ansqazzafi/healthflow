@@ -5,7 +5,12 @@ import { RegisterDoctorDTO } from 'src/modules/doctor/DTO/register-doctor.dto';
 import { RegisterHospitalDTO } from 'src/modules/hospital/DTO/register-hospital.dto';
 import { roles } from 'enums/role.enum';
 
+
 export class RegisterDto {
+
+   
+
+
     @IsEnum(roles)
     @IsNotEmpty()
     role: roles; 

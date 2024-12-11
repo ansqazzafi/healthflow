@@ -4,3 +4,10 @@ export enum AppointmentStatus {
   Cancelled = 'Cancelled',
   PENDING = 'PENDING',
 }
+
+
+export enum AppointmentType {
+  Online = "Online",
+  Physical = "Physical",
+
+}

@@ -5,7 +5,7 @@ import {VerifyAdminGuard} from 'guards/verify-admin.guard'
 export class AdminController {
   constructor(private readonly adminService: AdminService) {}
 
-  @Post('verify')
+  @Post('accounts/verify')
   @UseGuards(VerifyAdminGuard)
   async verifyAccount(@Body() body: { Id: string; role: string }) {
     console.log("Request received:", body);

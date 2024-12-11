@@ -6,13 +6,19 @@ import { Model } from 'mongoose';
 import { Hospital, HospitalDocument } from './hospital.schema';
 import { AuthService } from '../auth/auth.service';
 import * as bcrypt from 'bcrypt';
+import { RegisterDto } from 'DTO/register.dto';
+import { DoctorService } from '../doctor/doctor.service';
+import { RegisterDoctorDTO } from '../doctor/DTO/register-doctor.dto';
+import { Specialty } from 'enums/specialty.enum';
+import { gender } from 'enums/gender.enum';
 @Injectable()
 export class HospitalService {
   constructor(
     @InjectModel(Hospital.name) private hospitalModel: Model<HospitalDocument>,
     @Inject(forwardRef(() => AuthService))
     private readonly authService: AuthService,
-  ) {}
+    private readonly doctorService: DoctorService
+  ) { }
   async register(register: RegisterHospitalDTO): Promise<any> {
     try {
       const existingHospital = await this.hospitalModel.findOne({
@@ -73,6 +79,39 @@ export class HospitalService {
         throw error;
       }
       throw new CustomError('Error during user login', 500);
+    }
+  }
+
+  public async registerDoctor(RegisterDto: RegisterDoctorDTO, id: string): Promise<any> {
+    try {
+      const registeredDoctor = await this.doctorService.register(RegisterDto, id)
+      if (!registeredDoctor) {
+        throw new CustomError("Unable to Registered the Doctor", 401)
+      }
+      console.log("registeredDoctor", registeredDoctor);
+
+      return registeredDoctor
+    } catch (error) {
+      if (error instanceof CustomError) {
+        throw error
+      }
+      throw new CustomError("There is an error during register doctor", 402)
+    }
+  }
+
+  public async getDoctorsByHospital(id: string, page: number, limit: number, specialty?: Specialty,  city?:string, gender?:gender): Promise<any> {
+    try {
+      const doctors = await this.doctorService.getDoctorsByHospital(id, page, limit, specialty, city, gender)
+      if (!doctors) {
+        throw new CustomError("Unable to get list of doctors", 401)
+      }
+      return doctors
+
+    } catch (error) {
+      if (error instanceof CustomError) {
+        throw error
+      }
+      throw new CustomError("There is an error fetching error", 402)
     }
   }
 }
