@@ -245,6 +245,8 @@ export class AuthService {
 
   public async resetPassword(phoneNumber, newPassword, role): Promise<any> {
     try {
+      console.log("Entered in update", newPassword);
+
       let entity;
       switch (role) {
         case roles.patient:
@@ -268,8 +270,10 @@ export class AuthService {
           }
           break;
         default:
-          throw new CustomError('Invalid role in refresh token', 400);
+          throw new CustomError('Invalid role', 400);
       }
+
+      return true
 
     } catch (error) {
       if (error instanceof CustomError) {

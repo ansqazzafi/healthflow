@@ -92,7 +92,9 @@ export class AuthController {
   }
 
   @Post('verify-phone')
-  async verifyPhone(@Body() phoneNumber: string, role: string): Promise<SuccessHandler<any>> {
+  async verifyPhone(@Body() body: { phoneNumber: string, role: string }): Promise<SuccessHandler<any>> {
+    const { phoneNumber, role } = body
+
     try {
       const response = await this.authService.verifyPhone(phoneNumber, role);
       if (!response) {
@@ -109,13 +111,17 @@ export class AuthController {
 
   @Post('reset-password')
   @UsePipes(HashPasswordPipe)
-  async resetPassword(@Body() phoneNumber: string, verificationCode: string, newPassword: string, role: string) {
+  async resetPassword(@Body() body: { phoneNumber: string, verificationCode: string, newPassword: string, role: string }) {
+    const { phoneNumber, verificationCode, newPassword, role } = body
+    console.log("Body");
+    
     try {
       const response = await this.authService.verifyCode(phoneNumber, verificationCode)
       if (!response) {
         throw new CustomError("unable to verify phone")
       }
       const updatedPassword = await this.authService.resetPassword(phoneNumber, newPassword, role)
+      console.log("Updated Password", updatedPassword)
       if (!updatedPassword) {
         throw new CustomError("Unable to update the Password", 401)
       }
