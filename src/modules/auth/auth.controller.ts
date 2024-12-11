@@ -125,7 +125,7 @@ export class AuthController {
       if (!updatedPassword) {
         throw new CustomError("Unable to update the Password", 401)
       }
-      return this.responseHandler.successHandler(true, "Code verified Successfully")
+      return this.responseHandler.successHandler(true, "Passowrd Reset Successfully")
 
     } catch (error) {
       if (error instanceof CustomError) {
