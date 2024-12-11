@@ -7,13 +7,12 @@ import { ResponseHandler } from 'utility/success-response';
 import { Request } from 'express';
 import { HashPasswordPipe } from 'pipes/hash-password.pipe';
 import { Specialty } from 'enums/specialty.enum';
-import { parse } from 'path';
-import { address } from 'interfaces/address.interface';
 import { gender } from 'enums/gender.enum';
 @Controller('hospital')
 export class HospitalController {
     constructor(private readonly hospitalService: HospitalService,
-        private readonly responseHandler: ResponseHandler
+        private readonly responseHandler: ResponseHandler,
+     
     ) { }
 
     @Post('register-doctor')
@@ -65,6 +64,23 @@ export class HospitalController {
                 throw error;
             }
             throw new CustomError("There was an error fetching the doctors", 500);
+        }
+    }
+
+    @Get('appointments')
+    public async getAppointments(@Req() req:Request):Promise<SuccessHandler<any>>{
+        const hospitalId = req.entity.id
+        try {
+            const response = await this.hospitalService.getAppointments(hospitalId)
+            if(!response){
+                throw new CustomError("Unable to fetched Appointments")
+            }
+            return this.responseHandler.successHandler(response, "Appointments fetched Successfully")
+        } catch (error) {
+            if(error instanceof CustomError){
+                throw error
+            }
+            throw new CustomError("There is an error during fetching appointments", 402)
         }
     }
 

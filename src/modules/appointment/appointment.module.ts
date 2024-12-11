@@ -12,5 +12,7 @@ MongooseModule;
   ],
   controllers: [],
   providers: [AppointmentService, ResponseHandler],
+  exports:[AppointmentService]
 })
+
 export class AppointmentModule {}
