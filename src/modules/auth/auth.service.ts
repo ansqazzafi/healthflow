@@ -27,7 +27,7 @@ export class AuthService {
     private readonly userService: UserService,
     @InjectModel(User.name) private userModel: Model<UserDocument>,
     @InjectModel(Hospital.name) private hospitalModel: Model<HospitalDocument>,
-  ) { }
+  ) {}
 
   public removeFields(obj: any, fields: string[]): any {
     const removedFields = { ...obj };
@@ -130,17 +130,24 @@ export class AuthService {
       throw new CustomError('Entity not found', 404);
     }
     await entity.updateOne({ $set: { refreshToken: 1 } });
-    return { success: true, message: 'Logout successful, refreshToken invalidated' };
+    return {
+      success: true,
+      message: 'Logout successful, refreshToken invalidated',
+    };
   }
-
 
   async refreshToken(oldRefreshToken: string): Promise<any> {
     try {
-      const decoded = await this.jwtService.verifyAsync(oldRefreshToken, { secret: process.env.REFRESH_KEY });
+      const decoded = await this.jwtService.verifyAsync(oldRefreshToken, {
+        secret: process.env.REFRESH_KEY,
+      });
       console.log('Decoded Token:', decoded);
       const { id, role } = decoded;
       if (!id || !role) {
-        throw new CustomError('Invalid refresh token - Missing ID or Role', 401);
+        throw new CustomError(
+          'Invalid refresh token - Missing ID or Role',
+          401,
+        );
       }
       let entity;
       switch (role) {
@@ -154,7 +161,10 @@ export class AuthService {
           }
 
           if (entity.refreshToken !== oldRefreshToken) {
-            throw new CustomError('Invalid refresh token - Tokens do not match', 402);
+            throw new CustomError(
+              'Invalid refresh token - Tokens do not match',
+              402,
+            );
           }
           break;
         case roles.hospital:
@@ -164,7 +174,10 @@ export class AuthService {
             throw new CustomError('Hospital not found', 404);
           }
           if (entity.refreshToken !== oldRefreshToken) {
-            throw new CustomError('Invalid refresh token - Tokens do not match', 402);
+            throw new CustomError(
+              'Invalid refresh token - Tokens do not match',
+              402,
+            );
           }
           break;
 
@@ -172,20 +185,19 @@ export class AuthService {
           throw new CustomError('Invalid role in refresh token', 400);
       }
 
-      console.log("Heloo", entity)
+      console.log('Heloo', entity);
       const newAccessToken = await this.generateAccessToken(entity);
       const newRefreshToken = await this.generateRefreshToken(entity);
-      console.log("newTokens", newAccessToken, newRefreshToken)
+      console.log('newTokens', newAccessToken, newRefreshToken);
       entity.refreshToken = newRefreshToken;
       await entity.save();
-      console.log("saved refreshed");
+      console.log('saved refreshed');
       return { accessToken: newAccessToken, refreshToken: newRefreshToken };
     } catch (error) {
       console.error('Error during refresh token:', error);
       throw new CustomError(error?.message || 'Failed to refresh token', 500);
     }
   }
-
 
   async verifyPhone(phoneNumber: string, role: string): Promise<any> {
     try {
@@ -200,7 +212,9 @@ export class AuthService {
           }
           break;
         case roles.hospital:
-          entity = await this.hospitalModel.findOne({ phoneNumber: phoneNumber });
+          entity = await this.hospitalModel.findOne({
+            phoneNumber: phoneNumber,
+          });
           if (!entity) {
             throw new CustomError('Hospital not found', 404);
           }
@@ -209,43 +223,51 @@ export class AuthService {
           throw new CustomError('Invalid role in refresh token', 400);
       }
       if (entity) {
-        const message = "Your Verification Code for Forgot password are : "
-        const verificationCode = await this.twilioService.sendVerificationSms(entity.phoneNumber, message)
+        const message = 'Your Verification Code for Forgot password are : ';
+        const verificationCode = await this.twilioService.sendVerificationSms(
+          entity.phoneNumber,
+          message,
+        );
         if (!verificationCode) {
-          throw new CustomError("Unable to get Verifcation Code")
+          throw new CustomError('Unable to get Verifcation Code');
         }
-        return verificationCode
+        return verificationCode;
       }
-
     } catch (error) {
       if (error instanceof CustomError) {
-        throw error
+        throw error;
       }
-      throw new CustomError("There is an Error during verify phone number", 402)
+      throw new CustomError(
+        'There is an Error during verify phone number',
+        402,
+      );
     }
-
-
   }
 
-  async verifyCode(phoneNumber: string, verificationCode: string): Promise<any> {
+  async verifyCode(
+    phoneNumber: string,
+    verificationCode: string,
+  ): Promise<any> {
     try {
-      const isVerified = await this.twilioService.verifyCode(phoneNumber, verificationCode)
+      const isVerified = await this.twilioService.verifyCode(
+        phoneNumber,
+        verificationCode,
+      );
       if (!isVerified) {
-        throw new CustomError("Unable to Verify the Code")
+        throw new CustomError('Unable to Verify the Code');
       }
-      return isVerified
+      return isVerified;
     } catch (error) {
       if (error instanceof CustomError) {
-        throw error
+        throw error;
       }
-      throw new CustomError("There is an error to verify the Code", 402)
+      throw new CustomError('There is an error to verify the Code', 402);
     }
   }
-
 
   public async resetPassword(phoneNumber, newPassword, role): Promise<any> {
     try {
-      console.log("Entered in update", newPassword);
+      console.log('Entered in update', newPassword);
 
       let entity;
       switch (role) {
@@ -255,7 +277,8 @@ export class AuthService {
           entity = await this.userModel.findOneAndUpdate(
             { phoneNumber: phoneNumber },
             { password: newPassword },
-            { new: true });
+            { new: true },
+          );
           if (!entity) {
             throw new CustomError('User not found', 404);
           }
@@ -264,7 +287,8 @@ export class AuthService {
           entity = await this.hospitalModel.findOneAndUpdate(
             { phoneNumber: phoneNumber },
             { password: newPassword },
-            { new: true });
+            { new: true },
+          );
           if (!entity) {
             throw new CustomError('Hospital not found', 404);
           }
@@ -273,14 +297,12 @@ export class AuthService {
           throw new CustomError('Invalid role', 400);
       }
 
-      return true
-
+      return true;
     } catch (error) {
       if (error instanceof CustomError) {
-        throw error
+        throw error;
       }
-      throw new CustomError("There is an error during reset the password")
+      throw new CustomError('There is an error during reset the password');
     }
   }
-
 }

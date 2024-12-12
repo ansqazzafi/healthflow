@@ -3,7 +3,6 @@ import {
   IsEmail,
   IsNotEmpty,
   IsPhoneNumber,
-  MinLength,
   IsOptional,
   IsEnum,
   IsObject,
@@ -11,55 +10,41 @@ import {
 import { Type } from 'class-transformer';
 import { address } from 'interfaces/address.interface';
 import { gender } from 'enums/gender.enum';
+
 class AddressDto {
   @IsString()
-  @IsNotEmpty()
-  country: string;
+  @IsOptional()
+  country?: string;
 
   @IsString()
-  @IsNotEmpty()
-  city: string;
+  @IsOptional()
+  city?: string;
 }
-export class RegisterHospitalDTO {
-  @IsString()
-  @IsNotEmpty()
-  name: string;
 
-  @IsEmail()
-  @IsNotEmpty()
-  email: string;
-
+export class UpdateHospitalDTO {
   @IsString()
-  @MinLength(6)
-  @IsNotEmpty()
-  password: string;
+  @IsOptional()
+  name?: string;
 
   @IsPhoneNumber(null)
-  @IsNotEmpty()
-  phoneNumber: string;
+  @IsOptional()
+  phoneNumber?: string;
 
   @IsObject()
   @Type(() => AddressDto)
-  @IsNotEmpty()
-  address: AddressDto;
+  @IsOptional()
+  address?: AddressDto;
 
   @IsString()
-  @IsNotEmpty()
-  medicalLicense: string;
-
-  @IsString()
-  @IsNotEmpty()
-  CEO: string;
+  @IsOptional()
+  CEO?: string;
 
   @IsString()
   @IsOptional()
   biography?: string;
 
   @IsOptional()
-  @IsString({ each: true })
-  departments?: string[];
-
-  @IsOptional()
   @IsString()
+  @IsOptional()
   profilePicture?: string;
 }

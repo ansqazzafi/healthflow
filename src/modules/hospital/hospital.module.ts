@@ -3,6 +3,7 @@ import {
   MiddlewareConsumer,
   Module,
   NestModule,
+  RequestMethod,
 } from '@nestjs/common';
 import { HospitalService } from './hospital.service';
 import { HospitalController } from './hospital.controller';
@@ -15,7 +16,10 @@ import { JwtMiddleware } from 'middlewares/verify-jwt.middlware';
 import { JwtService } from '@nestjs/jwt';
 import { UserModule } from '../user/user.module';
 import { AppointmentModule } from '../appointment/appointment.module';
-import { Appointment, AppointmentSchema } from '../appointment/appointment.schema';
+import {
+  Appointment,
+  AppointmentSchema,
+} from '../appointment/appointment.schema';
 import { User, UserSchema } from '../user/user.schema';
 import { Doctor, DoctorSchema } from '../doctor/doctor.schema';
 @Module({
@@ -40,9 +44,8 @@ export class HospitalModule implements NestModule {
     consumer
       .apply(JwtMiddleware)
       .forRoutes(
-        'hospital/register-doctor',
-        'hospital/doctors',
-        'hospital/appointments',
+        { path: 'hospital/register-doctor', method: RequestMethod.POST },
+        { path: 'hospital', method: RequestMethod.PATCH },
       );
   }
 }

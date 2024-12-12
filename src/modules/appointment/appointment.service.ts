@@ -8,13 +8,16 @@ export class AppointmentService {
   constructor(
     @InjectModel(Appointment.name)
     private appointmentModel: Model<AppointmentDocument>,
-  ) { }
+  ) {}
 
   public async getAppointments(hospitalId: string): Promise<any> {
     try {
-      const appointments = await this.appointmentModel.find({
-        hospital: hospitalId,
-      }).populate('doctor', '-password -refreshToken').populate('patient', '-password -refreshToken')
+      const appointments = await this.appointmentModel
+        .find({
+          hospital: hospitalId,
+        })
+        .populate('doctor', '-password -refreshToken')
+        .populate('patient', '-password -refreshToken');
       if (appointments.length === 0) {
         throw new CustomError('No appointments found for this hospital', 404);
       }
@@ -30,6 +33,3 @@ export class AppointmentService {
     }
   }
 }
-
-
-

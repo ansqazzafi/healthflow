@@ -1,4 +1,12 @@
-import { Controller, Post, Body, UsePipes, Res, Req, Patch } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  UsePipes,
+  Res,
+  Req,
+  Patch,
+} from '@nestjs/common';
 import { ResponseHandler } from 'utility/success-response';
 import { RegisterDto } from 'DTO/register.dto';
 import { HashPasswordPipe } from 'pipes/hash-password.pipe';
@@ -14,7 +22,7 @@ export class AuthController {
     private readonly authService: AuthService,
     private readonly jwtService: JwtService,
     private readonly responseHandler: ResponseHandler,
-  ) { }
+  ) {}
 
   @Post('register')
   @UsePipes(HashPasswordPipe)
@@ -49,11 +57,14 @@ export class AuthController {
   }
 
   @Post('logout')
-  public async logoutUser(@Req() req: Request, @Res({ passthrough: true }) response: Response): Promise<SuccessHandler<any>> {
-    console.log("Entered");
-    console.log(req.entity, "entity");
-    const { id, role } = req.entity
-    console.log(id, role)
+  public async logoutUser(
+    @Req() req: Request,
+    @Res({ passthrough: true }) response: Response,
+  ): Promise<SuccessHandler<any>> {
+    console.log('Entered');
+    console.log(req.entity, 'entity');
+    const { id, role } = req.entity;
+    console.log(id, role);
     const responseFromService = await this.authService.logout(id, role);
     const Options = {
       httpOnly: true,
@@ -64,36 +75,50 @@ export class AuthController {
       response.clearCookie('refreshToken', Options);
     }
 
-    return this.responseHandler.successHandler(null, "Account LoggedOut Successfully")
-
+    return this.responseHandler.successHandler(
+      null,
+      'Account LoggedOut Successfully',
+    );
   }
 
   @Post('refresh-token')
-  async refreshToken(@Req() req: Request, @Res({ passthrough: true }) response: Response,) {
+  async refreshToken(
+    @Req() req: Request,
+    @Res({ passthrough: true }) response: Response,
+  ) {
     const IncommingRefreshToken = req.cookies?.refreshToken;
+    console.log('uncc', IncommingRefreshToken);
+
     if (!IncommingRefreshToken) {
       throw new CustomError('Refresh token is missing', 400);
     }
     try {
-      const newTokens = await this.authService.refreshToken(IncommingRefreshToken);
-      const { accessToken, refreshToken } = newTokens
-      console.log("Controller", newTokens);
+      const newTokens = await this.authService.refreshToken(
+        IncommingRefreshToken,
+      );
+      const { accessToken, refreshToken } = newTokens;
+      console.log('Controller', newTokens);
 
-      const Options = { httpOnly: true, secure: true }
+      const Options = { httpOnly: true, secure: true };
 
       response.cookie('accessToken', accessToken, Options);
 
       response.cookie('refreshToken', refreshToken, Options);
 
-      return this.responseHandler.successHandler(newTokens, "Tokens refreshed Sucessfully")
+      return this.responseHandler.successHandler(
+        newTokens,
+        'Tokens refreshed Sucessfully',
+      );
     } catch (error) {
       throw new CustomError(error.message || 'Failed to refresh token', 500);
     }
   }
 
   @Post('verify-phone')
-  async verifyPhone(@Body() body: { phoneNumber: string, role: string }): Promise<SuccessHandler<any>> {
-    const { phoneNumber, role } = body
+  async verifyPhone(
+    @Body() body: { phoneNumber: string; role: string },
+  ): Promise<SuccessHandler<any>> {
+    const { phoneNumber, role } = body;
 
     try {
       const response = await this.authService.verifyPhone(phoneNumber, role);
@@ -105,28 +130,48 @@ export class AuthController {
       if (error instanceof CustomError) {
         throw error;
       }
-      throw new CustomError('There is an Error During verify phone try again later', 402);
+      throw new CustomError(
+        'There is an Error During verify phone try again later',
+        402,
+      );
     }
   }
 
   @Post('reset-password')
   @UsePipes(HashPasswordPipe)
-  async resetPassword(@Body() body: { phoneNumber: string, verificationCode: string, newPassword: string, role: string }) {
-    const { phoneNumber, verificationCode, newPassword, role } = body
-    console.log("Body");
-    
-    try {
-      const response = await this.authService.verifyCode(phoneNumber, verificationCode)
-      if (!response) {
-        throw new CustomError("unable to verify phone")
-      }
-      const updatedPassword = await this.authService.resetPassword(phoneNumber, newPassword, role)
-      console.log("Updated Password", updatedPassword)
-      if (!updatedPassword) {
-        throw new CustomError("Unable to update the Password", 401)
-      }
-      return this.responseHandler.successHandler(true, "Passowrd Reset Successfully")
+  async resetPassword(
+    @Body()
+    body: {
+      phoneNumber: string;
+      verificationCode: string;
+      newPassword: string;
+      role: string;
+    },
+  ) {
+    const { phoneNumber, verificationCode, newPassword, role } = body;
+    console.log('Body');
 
+    try {
+      const response = await this.authService.verifyCode(
+        phoneNumber,
+        verificationCode,
+      );
+      if (!response) {
+        throw new CustomError('unable to verify phone');
+      }
+      const updatedPassword = await this.authService.resetPassword(
+        phoneNumber,
+        newPassword,
+        role,
+      );
+      console.log('Updated Password', updatedPassword);
+      if (!updatedPassword) {
+        throw new CustomError('Unable to update the Password', 401);
+      }
+      return this.responseHandler.successHandler(
+        true,
+        'Passowrd Reset Successfully',
+      );
     } catch (error) {
       if (error instanceof CustomError) {
         throw error;
@@ -134,8 +179,4 @@ export class AuthController {
       throw new CustomError('Error during code verification', 500);
     }
   }
-
-
-
-
 }
