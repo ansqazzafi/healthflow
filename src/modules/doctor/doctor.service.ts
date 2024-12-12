@@ -2,7 +2,7 @@ import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { RegisterDoctorDTO } from './DTO/register-doctor.dto';
 import { CustomError } from 'utility/custom-error';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { ClientSession, Model } from 'mongoose';
 import { Doctor, DoctorDocument } from './doctor.schema';
 import * as bcrypt from 'bcrypt';
 import { AuthService } from '../auth/auth.service';
@@ -107,5 +107,6 @@ export class DoctorService {
       throw new CustomError('There is an error during fetching doctors', 402);
     }
   }
+
 
 }

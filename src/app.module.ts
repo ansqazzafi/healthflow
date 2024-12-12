@@ -12,6 +12,8 @@ import { UserModule } from './modules/user/user.module';
 import { DoctorModule } from './modules/doctor/doctor.module';
 import { HospitalModule } from './modules/hospital/hospital.module';
 import { AdminModule } from './modules/admin/admin.module';
+import { Doctor, DoctorSchema } from './modules/doctor/doctor.schema';
+import { Hospital, HospitalSchema } from './modules/hospital/hospital.schema';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -20,6 +22,8 @@ import { AdminModule } from './modules/admin/admin.module';
 
     MongooseModule.forRoot(process.env.MONGODB_URI),
     MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
+    MongooseModule.forFeature([{ name: Doctor.name, schema: DoctorSchema }]),
+    MongooseModule.forFeature([{ name: Hospital.name, schema: HospitalSchema }]),
     AuthModule,
     TwilioModule,
     UserModule,

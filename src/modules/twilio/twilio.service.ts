@@ -32,6 +32,7 @@ export class TwilioService {
         body: message,
         from: this.configService.get<string>('TWILIO_PHONE_NUMBER'),
         to,
+        
       });
       if (!response) {
         throw new CustomError("Unable to send message", 401)

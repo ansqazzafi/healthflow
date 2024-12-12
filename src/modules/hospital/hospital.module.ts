@@ -15,14 +15,20 @@ import { JwtMiddleware } from 'middlewares/verify-jwt.middlware';
 import { JwtService } from '@nestjs/jwt';
 import { UserModule } from '../user/user.module';
 import { AppointmentModule } from '../appointment/appointment.module';
+import { Appointment, AppointmentSchema } from '../appointment/appointment.schema';
+import { User, UserSchema } from '../user/user.schema';
+import { Doctor, DoctorSchema } from '../doctor/doctor.schema';
 @Module({
   imports: [
     forwardRef(() => AuthModule),
     DoctorModule,
-    UserModule,
     AppointmentModule,
+    UserModule,
     MongooseModule.forFeature([
       { name: Hospital.name, schema: HospitalSchema },
+      { name: Appointment.name, schema: AppointmentSchema },
+      { name: User.name, schema: UserSchema },
+      { name: Doctor.name, schema: DoctorSchema },
     ]),
   ],
   providers: [HospitalService, ResponseHandler, JwtService],

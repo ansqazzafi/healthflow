@@ -6,21 +6,25 @@ import { Model } from 'mongoose';
 import { Hospital, HospitalDocument } from './hospital.schema';
 import { AuthService } from '../auth/auth.service';
 import * as bcrypt from 'bcrypt';
-import { RegisterDto } from 'DTO/register.dto';
 import { DoctorService } from '../doctor/doctor.service';
 import { RegisterDoctorDTO } from '../doctor/DTO/register-doctor.dto';
-import { Specialty } from 'enums/specialty.enum';
-import { gender } from 'enums/gender.enum';
 import { AppointmentService } from '../appointment/appointment.service';
+import { throws } from 'assert';
+import { User, UserDocument } from '../user/user.schema';
+import { Doctor, DoctorDocument } from '../doctor/doctor.schema';
+import { Appointment, AppointmentDocument } from '../appointment/appointment.schema';
+import { UserService } from '../user/user.service';
 @Injectable()
 export class HospitalService {
   constructor(
     @InjectModel(Hospital.name) private hospitalModel: Model<HospitalDocument>,
+    @InjectModel(User.name) private userModel: Model<UserDocument>,
+    @InjectModel(Appointment.name) private appointmentModel: Model<AppointmentDocument>,
+    @InjectModel(Doctor.name) private doctorModel: Model<DoctorDocument>,
     @Inject(forwardRef(() => AuthService))
     private readonly authService: AuthService,
     private readonly doctorService: DoctorService,
-    private readonly appointmentService: AppointmentService,
-  ) {}
+  ) { }
   async register(register: RegisterHospitalDTO): Promise<any> {
     try {
       const existingHospital = await this.hospitalModel.findOne({
@@ -107,50 +111,94 @@ export class HospitalService {
     }
   }
 
-  public async getDoctorsByHospital(
-    id: string,
-    page: number,
-    limit: number,
-    specialty?: Specialty,
-    city?: string,
-    gender?: gender,
-  ): Promise<any> {
+  public async getHospitals(page: number, limit: number, city?: string): Promise<any> {
     try {
-      const doctors = await this.doctorService.getDoctorsByHospital(
-        id,
-        page,
-        limit,
-        specialty,
-        city,
-        gender,
-      );
-      if (!doctors) {
-        throw new CustomError('Unable to get list of doctors', 401);
+      const skip = (page - 1) * limit;
+
+      const aggregation = await this.hospitalModel.aggregate([
+        {
+          $match: {
+            ...(city && { 'address.city': city }),
+          }
+        },
+        {
+          $facet: {
+            hospitals: [
+              { $skip: skip },
+              { $limit: limit },
+            ],
+            totalCount: [
+              { $count: 'count' }
+            ]
+          }
+        }
+      ]);
+      if (aggregation[0].hospitals.length === 0) {
+        throw new CustomError("No hospital Found", 404)
       }
-      return doctors;
+      const result = {
+        hospitals: aggregation[0]?.hospitals || [],
+        totalCount: aggregation[0]?.totalCount[0]?.count || 0,
+      };
+
+      return result;
+
     } catch (error) {
       if (error instanceof CustomError) {
-        throw error;
+        throw error
       }
-      throw new CustomError('There is an error fetching error', 402);
+      throw new CustomError("There is an error during fetching Hospitals", 500)
     }
   }
 
-  public async getAppointments(hospitalId:string): Promise<any> {
+  public async deleteHospital(id: string): Promise<any> {
+    const session = await this.hospitalModel.db.startSession();
     try {
-      const appointments = await this.appointmentService.getAppointments(hospitalId);
-      if (!appointments) {
-        throw new CustomError('Unable to fetch appointments', 402);
+      session.startTransaction();
+      const hospital = await this.hospitalModel.findByIdAndDelete({ _id: id }, { session });
+      console.log(hospital, "Hospital---");
+      if (!hospital) {
+        throw new CustomError("No Hospital found with given id", 404);
       }
-      return appointments;
+
+      const deletedDoctors = await this.doctorModel.deleteMany({ hospital: id }, { session });
+      console.log(deletedDoctors, "Doctor---");
+      if (deletedDoctors.deletedCount === 0) {
+        throw new CustomError("No doctors found to delete for the given hospital", 404);
+      }
+      const deletedAppointments = await this.appointmentModel.aggregate([
+        { $match: { hospital: id } },
+        { $project: { _id: 1 } },
+      ]);
+      console.log(deletedAppointments, "Appointments---");
+      if (deletedAppointments.length === 0) {
+        throw new CustomError("No appointments found to delete for the given hospital", 404);
+      }
+      const deletedAppointmentsIds = deletedAppointments.map(appointment => appointment._id);
+      const result = await this.userModel.updateMany(
+        {},
+        {
+          $pull: {
+            appointmentRecords: { $in: deletedAppointmentsIds }
+          }
+        }
+      )
+      if (result.modifiedCount === 0) {
+        throw new CustomError("Cannot update the appointment records", 500);
+      }
+      await session.commitTransaction();
+      return true;
     } catch (error) {
+      console.log("Error:", error);
+      await session.abortTransaction();
       if (error instanceof CustomError) {
         throw error;
       }
-      throw new CustomError(
-        'There is an error during fetching appointments',
-        402,
-      );
+      throw new CustomError("There is an error during the deletion of the hospital", 500);
+    } finally {
+      session.endSession();
     }
   }
+
+
 }

@@ -1,4 +1,4 @@
-import { Body, Controller, Req, Post, UsePipes, Query, Get, ParseIntPipe } from '@nestjs/common';
+import { Body, Controller, Req, Post, UsePipes, Query, Get, Param, Delete } from '@nestjs/common';
 import { HospitalService } from './hospital.service';
 import { RegisterDto } from 'DTO/register.dto';
 import { SuccessHandler } from 'interfaces/success-handler.interface';
@@ -8,13 +8,13 @@ import { Request } from 'express';
 import { HashPasswordPipe } from 'pipes/hash-password.pipe';
 import { Specialty } from 'enums/specialty.enum';
 import { gender } from 'enums/gender.enum';
+import { log } from 'node:console';
 @Controller('hospital')
 export class HospitalController {
     constructor(private readonly hospitalService: HospitalService,
         private readonly responseHandler: ResponseHandler,
-     
-    ) { }
 
+    ) { }
     @Post('register-doctor')
     @UsePipes(HashPasswordPipe)
     public async registerDoctor(@Body() RegisterDto: RegisterDto, @Req() req: Request): Promise<SuccessHandler<any>> {
@@ -39,53 +39,27 @@ export class HospitalController {
         }
     }
 
-    @Get('doctors')
-    public async getDoctors(
-        @Req() req: Request,
-        @Query('page') page: string = "1",
-        @Query('limit') limit: string = "10",
-        @Query('specialty') specialty?: Specialty,
-        @Query('city') city?: string,  
-        @Query('gender') gender?: gender,  
+    @Get()
+    public async getHospitals(
+        @Query('page') page: string = '1',
+        @Query('limit') limit: string = '10',
+        @Query('city') city?: string,
     ): Promise<SuccessHandler<any>> {
-        console.log(req.query, 'f')
-        const pageNumber = parseInt(page);
-        const limitNumber = parseInt(limit);
-        console.log(typeof (page), limit , city ,"rere")
-        const { id } = req.entity;
-        if (req.entity.role !== "hospital") {
-            throw new CustomError("You are not authorized to view doctors");
-        }
-        try {
-            const response = await this.hospitalService.getDoctorsByHospital(id, pageNumber, limitNumber, specialty, city, gender);
-            return this.responseHandler.successHandler(response, "Doctors retrieved successfully");
-        } catch (error) {
-            if (error instanceof CustomError) {
-                throw error;
-            }
-            throw new CustomError("There was an error fetching the doctors", 500);
-        }
+        const newPage = parseInt(page)
+        const newLimit = parseInt(limit)
+        const response = await this.hospitalService.getHospitals(newPage, newLimit, city)
+        return this.responseHandler.successHandler(response, 'Hospitals fetched Successfully')
+
     }
 
-    @Get('appointments')
-    public async getAppointments(@Req() req:Request):Promise<SuccessHandler<any>>{
-        const hospitalId = req.entity.id
-        try {
-            const response = await this.hospitalService.getAppointments(hospitalId)
-            if(!response){
-                throw new CustomError("Unable to fetched Appointments")
-            }
-            return this.responseHandler.successHandler(response, "Appointments fetched Successfully")
-        } catch (error) {
-            if(error instanceof CustomError){
-                throw error
-            }
-            throw new CustomError("There is an error during fetching appointments", 402)
-        }
+    @Delete(':id')
+    public async deleteHospital(@Param('id') id: string): Promise<SuccessHandler<any>> {
+        console.log("id", id)
+        const response = await this.hospitalService.deleteHospital(id)
+        return this.responseHandler.successHandler(true, "Hospital Deleted Successfully")
     }
 
 
 
 
 }
-// hospital/doctors?specialty=cardiology&page=1&limit=10

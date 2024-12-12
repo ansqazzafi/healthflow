@@ -1,14 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Appointment, AppointmentDocument } from './appointment.schema';
-import { Model } from 'mongoose';
+import { ClientSession, Model } from 'mongoose';
 import { CustomError } from 'utility/custom-error';
 @Injectable()
 export class AppointmentService {
   constructor(
     @InjectModel(Appointment.name)
     private appointmentModel: Model<AppointmentDocument>,
-  ) {}
+  ) { }
 
   public async getAppointments(hospitalId: string): Promise<any> {
     try {
@@ -30,3 +30,6 @@ export class AppointmentService {
     }
   }
 }
+
+
+
