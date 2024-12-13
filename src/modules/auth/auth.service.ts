@@ -7,19 +7,17 @@ import { DoctorService } from '../doctor/doctor.service';
 import { HospitalService } from '../hospital/hospital.service';
 import { LoginInDTO } from 'DTO/login.dto';
 import { JwtService } from '@nestjs/jwt';
-import { AdminSchema, DoctorSchema, HospitalSchema, PatientCareSchema, PatientSchema, User, UserDocument } from '../user/user.schema';
+import { User, UserDocument } from '../user/user.schema';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { roles } from 'enums/role.enum';
 import { response } from 'express';
 import * as bcrypt from 'bcrypt'
-import { DiscriminatorClass } from '../seeder/discreminator.service';
 @Injectable()
 export class AuthService {
   constructor(
     private readonly twilioService: TwilioService,
     private readonly jwtService: JwtService,
-    private readonly discreminatorClass: DiscriminatorClass,
     @InjectModel(User.name) private userModel: Model<UserDocument>,
   ) { }
 
@@ -53,15 +51,12 @@ export class AuthService {
       const email = roleData.email;
 
       console.log(details[role], "Data");
-
-      console.log("Entereddd");
-      const UserModel = this.discreminatorClass.discriminatorValidator(role)
-      const user = await UserModel.findOne({ email: email });
+      const user = await this.userModel.findOne({ email: email });
       if (user) {
         throw new CustomError(`${role} registration failed: email already exists`, 409);
       }
 
-      const newUser = new UserModel({
+      const newUser = new this.userModel({
         ...roleData,
       });
       console.log("new User", newUser);

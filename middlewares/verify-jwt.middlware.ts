@@ -24,7 +24,6 @@ export class JwtMiddleware implements NestMiddleware {
     async use(req: Request, res: Response, next: NextFunction) {
         try {
             const token = req.cookies?.accessToken;
-            console.log(token, "Token from cookies");
             if (!token) {
                 throw new CustomError("Unauthorized request", 401);
             }
@@ -32,7 +31,6 @@ export class JwtMiddleware implements NestMiddleware {
             const decodedToken = await this.jwtService.verifyAsync(token, {
                 secret: process.env.ACCESS_KEY,
             });
-            console.log(decodedToken, "Decoded Token");
 
             const { _id, role } = decodedToken.credentials;
             if (!role || !_id) {

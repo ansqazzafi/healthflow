@@ -7,7 +7,7 @@ import { AuthModule } from './modules/auth/auth.module';
 import { TwilioModule } from './modules/twilio/twilio.module';
 import { UserService } from './modules/user/user.service';
 import { SeederService } from './modules/seeder/seeder.service';
-import { DiscriminatorUserModel, User, UserSchema } from './modules/user/user.schema';
+import { User, UserSchema } from './modules/user/user.schema';
 import { UserModule } from './modules/user/user.module';
 import { DoctorModule } from './modules/doctor/doctor.module';
 import { HospitalModule } from './modules/hospital/hospital.module';
@@ -21,16 +21,8 @@ import { Appointment, AppointmentSchema } from './modules/appointment/appointmen
     }),
 
     MongooseModule.forRoot(process.env.MONGODB_URI),
-    MongooseModule.forFeatureAsync([
-      {
-        name: User.name,
-        useFactory: () => {
-          return UserSchema;
-        },
-        
-      },
-    ]),
     MongooseModule.forFeature([{ name: Appointment.name, schema: AppointmentSchema }]),
+    MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
     AuthModule,
     TwilioModule,
     DoctorModule,

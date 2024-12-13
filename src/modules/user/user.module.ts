@@ -1,5 +1,5 @@
 import { forwardRef, Module } from '@nestjs/common';
-import { Admin, AdminSchema, DiscriminatorUserModel, User, UserSchema } from '../user/user.schema';
+import {User, UserSchema } from '../user/user.schema';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ResponseHandler } from 'utility/success-response';
 import { UserService } from './user.service';
@@ -11,11 +11,8 @@ import { AuthService } from '../auth/auth.service';
 @Module({
   imports: [
     forwardRef(()=>TwilioModule),
-    MongooseModule.forFeatureAsync([{ name: User.name, useFactory:()=>{
-      const schema = UserSchema;
-      const discriminator = DiscriminatorUserModel(schema)
-      return discriminator
-    }  }]),
+    MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
+
   ],
   controllers: [],
   providers: [UserService, ResponseHandler],

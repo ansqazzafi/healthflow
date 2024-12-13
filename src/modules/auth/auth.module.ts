@@ -16,7 +16,6 @@ import { DoctorModule } from '../doctor/doctor.module';
 import { JwtService } from '@nestjs/jwt';
 import { MiddlewareConsumer } from '@nestjs/common';
 import { JwtMiddleware } from 'middlewares/verify-jwt.middlware';
-import { DiscriminatorClass } from '../seeder/discreminator.service';
 @Module({
   imports: [
     TwilioModule,
@@ -25,7 +24,7 @@ import { DiscriminatorClass } from '../seeder/discreminator.service';
     UserModule
   ],
   controllers: [AuthController],
-  providers: [ResponseHandler, JwtService, AuthService, DiscriminatorClass],
+  providers: [ResponseHandler, JwtService, AuthService],
   exports: [AuthService],
 })
 export class AuthModule implements NestModule {

@@ -7,14 +7,13 @@ import { TwilioModule } from '../twilio/twilio.module';
 import { JwtMiddleware } from 'middlewares/verify-jwt.middlware';
 import { UserModule } from '../user/user.module';
 import { JwtService } from '@nestjs/jwt';
-import { DiscriminatorClass } from '../seeder/discreminator.service';
 MongooseModule;
 @Module({
   imports: [
     TwilioModule,
     UserModule,
   ],
-  providers: [DoctorService, ResponseHandler, JwtService, DiscriminatorClass],
+  providers: [DoctorService, ResponseHandler, JwtService],
   controllers: [DoctorController],
   exports: [DoctorService],
 })
