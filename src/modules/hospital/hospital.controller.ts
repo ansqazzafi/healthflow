@@ -28,39 +28,8 @@ export class HospitalController {
   constructor(
     private readonly hospitalService: HospitalService,
     private readonly responseHandler: ResponseHandler,
-  ) {}
-  @Post('register-doctor')
-  @UsePipes(HashPasswordPipe)
-  public async registerDoctor(
-    @Body() RegisterDto: RegisterDto,
-    @Req() req: Request,
-  ): Promise<SuccessHandler<any>> {
-    const { role, ...details } = RegisterDto;
-    const { id } = req.entity;
-    console.log('RegisterDTo', RegisterDto, id);
-    if (req.entity.role !== 'hospital') {
-      throw new CustomError('You cannot register Doctor');
-    }
-    try {
-      const response = await this.hospitalService.registerDoctor(
-        details.doctor,
-        id,
-      );
-      console.log('controller', response);
-      if (!response) {
-        throw new CustomError('Unable to Registered the Doctor', 401);
-      }
-      return this.responseHandler.successHandler(
-        true,
-        'Doctor registered SuccessFully',
-      );
-    } catch (error) {
-      if (error instanceof CustomError) {
-        throw error;
-      }
-      throw new CustomError('There is an error during register doctor', 402);
-    }
-  }
+  ) { }
+
 
   @Get()
   public async findHospitals(
@@ -108,7 +77,7 @@ export class HospitalController {
     @Body() updateDto: UpdateHospitalDTO,
     @Req() req: Request,
   ): Promise<SuccessHandler<any>> {
-    const { id, role } = req.entity;
+    const { id, role } = req.user;
     if (role !== 'hospital') {
       throw new CustomError('Cannot delete the hospital');
     }

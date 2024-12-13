@@ -20,15 +20,15 @@ import { JwtService } from '@nestjs/jwt';
 export class AuthController {
   constructor(
     private readonly authService: AuthService,
-    private readonly jwtService: JwtService,
     private readonly responseHandler: ResponseHandler,
-  ) {}
+  ) { }
 
   @Post('register')
   @UsePipes(HashPasswordPipe)
   public async register(
     @Body() registerDto: RegisterDto,
   ): Promise<SuccessHandler<any>> {
+    console.log(registerDto, "dto");
     const response = await this.authService.register(registerDto);
     if (response) {
       return this.responseHandler.successHandler(
@@ -62,10 +62,9 @@ export class AuthController {
     @Res({ passthrough: true }) response: Response,
   ): Promise<SuccessHandler<any>> {
     console.log('Entered');
-    console.log(req.entity, 'entity');
-    const { id, role } = req.entity;
-    console.log(id, role);
-    const responseFromService = await this.authService.logout(id, role);
+    console.log(req.user, 'entity');
+    const { id } = req.user;
+    const responseFromService = await this.authService.logout(id);
     const Options = {
       httpOnly: true,
       secure: true,
@@ -116,12 +115,12 @@ export class AuthController {
 
   @Post('verify-phone')
   async verifyPhone(
-    @Body() body: { phoneNumber: string; role: string },
+    @Body() body: { phoneNumber: string },
   ): Promise<SuccessHandler<any>> {
-    const { phoneNumber, role } = body;
+    const { phoneNumber } = body;
 
     try {
-      const response = await this.authService.verifyPhone(phoneNumber, role);
+      const response = await this.authService.verifyPhone(phoneNumber);
       if (!response) {
         throw new CustomError('Unable to verify phone number', 401);
       }
@@ -162,7 +161,6 @@ export class AuthController {
       const updatedPassword = await this.authService.resetPassword(
         phoneNumber,
         newPassword,
-        role,
       );
       console.log('Updated Password', updatedPassword);
       if (!updatedPassword) {

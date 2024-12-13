@@ -7,27 +7,21 @@ import { DoctorService } from '../doctor/doctor.service';
 import { HospitalService } from '../hospital/hospital.service';
 import { LoginInDTO } from 'DTO/login.dto';
 import { JwtService } from '@nestjs/jwt';
-import { User, UserDocument } from '../user/user.schema';
+import { AdminSchema, DoctorSchema, HospitalSchema, PatientCareSchema, PatientSchema, User, UserDocument } from '../user/user.schema';
 import { InjectModel } from '@nestjs/mongoose';
-import { Doctor, DoctorDocument } from '../doctor/doctor.schema';
-import { Hospital, HospitalDocument } from '../hospital/hospital.schema';
 import { Model } from 'mongoose';
 import { roles } from 'enums/role.enum';
 import { response } from 'express';
+import * as bcrypt from 'bcrypt'
+import { DiscriminatorClass } from '../seeder/discreminator.service';
 @Injectable()
 export class AuthService {
   constructor(
     private readonly twilioService: TwilioService,
     private readonly jwtService: JwtService,
-    @Inject(forwardRef(() => DoctorService))
-    private readonly doctorService: DoctorService,
-    @Inject(forwardRef(() => HospitalService))
-    private readonly hospitalService: HospitalService,
-    @Inject(forwardRef(() => UserService))
-    private readonly userService: UserService,
+    private readonly discreminatorClass: DiscriminatorClass,
     @InjectModel(User.name) private userModel: Model<UserDocument>,
-    @InjectModel(Hospital.name) private hospitalModel: Model<HospitalDocument>,
-  ) {}
+  ) { }
 
   public removeFields(obj: any, fields: string[]): any {
     const removedFields = { ...obj };
@@ -52,89 +46,88 @@ export class AuthService {
   }
 
   public async register(RegisterDto: any): Promise<boolean> {
-    const { role, ...details } = RegisterDto;
-    let response;
-    switch (role) {
-      case 'patient':
-        response = await this.userService.register(details.patient);
-        if (response) {
-          return true;
-        }
-        throw new CustomError('Patient registration failed', 500);
+    try {
+      const { role, ...details } = RegisterDto;
+      console.log(details, "details");
+      const roleData = details[role];
+      const email = roleData.email;
 
-      case 'hospital':
-        response = await this.hospitalService.register(details.hospital);
-        if (response) {
-          return true;
-        }
-        throw new CustomError('Hospital registration failed', 500);
-      default:
-        throw new CustomError('Invalid Role', 401);
+      console.log(details[role], "Data");
+
+      console.log("Entereddd");
+      const UserModel = this.discreminatorClass.discriminatorValidator(role)
+      const user = await UserModel.findOne({ email: email });
+      if (user) {
+        throw new CustomError(`${role} registration failed: email already exists`, 409);
+      }
+
+      const newUser = new UserModel({
+        ...roleData,
+      });
+      console.log("new User", newUser);
+
+      // Save the new user to the database
+      await newUser.save();
+      console.log("saved");
+      return true;
+
+    } catch (error) {
+      console.log(error, "error");
+      throw new CustomError("There is an error", 500);
     }
   }
+
+
 
   public async login(LoginDto: LoginInDTO): Promise<any> {
     const { role, ...LoginDetails } = LoginDto;
-    let response;
-    switch (role) {
-      case 'patient':
-        response = await this.userService.login(LoginDetails);
-        if (response) {
-          return response;
-        }
-        throw new CustomError('Patient login failed', 500);
-      case 'admin':
-        response = await this.userService.login(LoginDetails);
-        if (response) {
-          return response;
-        }
-        throw new CustomError('Patient login failed', 500);
-      case 'patientCare':
-        response = await this.userService.login(LoginDetails);
-        if (response) {
-          return response;
-        }
-        throw new CustomError('Patient login failed', 500);
-
-      case 'hospital':
-        response = await this.hospitalService.login(LoginDetails);
-        if (response) {
-          return response;
-        }
-        throw new CustomError('Hospital login failed', 500);
-      default:
-        throw new CustomError('Invalid Role', 401);
+    if (!LoginDetails.email || !LoginDetails.password) {
+      throw new CustomError('Email and password are required', 400);
     }
+    const user = await this.userModel.findOne({ email: LoginDetails.email });
+    if (!user) {
+      throw new CustomError(`${role} login failed`, 404);
+    }
+    if (user.isActive === false) {
+      throw new CustomError(`Please wait for Account verification`, 404);
+    }
+    const isPasswordCorrect = await bcrypt.compare(LoginDetails.password, user.password);
+    if (!isPasswordCorrect) {
+      throw new CustomError('Password mismatch', 403);
+    }
+
+    const accessToken = await this.generateAccessToken(user);
+    const refreshToken = await this.generateRefreshToken(user);
+    user.refreshToken = refreshToken;
+    await user.save();
+
+    const newUser = user.toObject();
+    const loggedInUser = this.removeFields(newUser, ['password', 'refreshToken']);
+    return {
+      [`${role}`]: loggedInUser,
+      accessToken,
+      refreshToken,
+    };
   }
 
-  async logout(Id: string, role: string): Promise<any> {
-    let entity;
-    switch (role) {
-      case 'patient':
-        entity = await this.userModel.findById(Id);
-        break;
-      case 'patientCare':
-        entity = await this.userModel.findById(Id);
-        break;
-      case 'admin':
-        entity = await this.userModel.findById(Id);
-        break;
-      case 'hospital':
-        entity = await this.hospitalModel.findById(Id);
-        break;
-      default:
-        throw new CustomError('Invalid role', 401);
-    }
 
-    if (!entity) {
+
+
+  async logout(Id: string): Promise<any> {
+    const user = await this.userModel.findById(Id);
+    if (!user) {
       throw new CustomError('Entity not found', 404);
     }
-    await entity.updateOne({ $set: { refreshToken: 1 } });
+    await user.updateOne({ $set: { refreshToken: 1 } });
     return {
       success: true,
       message: 'Logout successful, refreshToken invalidated',
     };
   }
+
+
+
+
 
   async refreshToken(oldRefreshToken: string): Promise<any> {
     try {
@@ -149,83 +142,44 @@ export class AuthService {
           401,
         );
       }
-      let entity;
-      switch (role) {
-        case roles.patient:
-        case roles.patientCare:
-        case roles.admin:
-          entity = await this.userModel.findById(id);
-          console.log('User DB token:', entity?.refreshToken);
-          if (!entity) {
-            throw new CustomError('User not found', 404);
-          }
 
-          if (entity.refreshToken !== oldRefreshToken) {
-            throw new CustomError(
-              'Invalid refresh token - Tokens do not match',
-              402,
-            );
-          }
-          break;
-        case roles.hospital:
-          entity = await this.hospitalModel.findById(id);
-          console.log('Hospital DB token:', entity?.refreshToken);
-          if (!entity) {
-            throw new CustomError('Hospital not found', 404);
-          }
-          if (entity.refreshToken !== oldRefreshToken) {
-            throw new CustomError(
-              'Invalid refresh token - Tokens do not match',
-              402,
-            );
-          }
-          break;
-
-        default:
-          throw new CustomError('Invalid role in refresh token', 400);
+      const user = await this.userModel.findById(id);
+      console.log('User DB token:', user?.refreshToken);
+      if (!user) {
+        throw new CustomError('User not found', 404);
       }
 
-      console.log('Heloo', entity);
-      const newAccessToken = await this.generateAccessToken(entity);
-      const newRefreshToken = await this.generateRefreshToken(entity);
+      if (user.refreshToken !== oldRefreshToken) {
+        throw new CustomError(
+          'Invalid refresh token - Tokens do not match',
+          402,
+        );
+      }
+      const newAccessToken = await this.generateAccessToken(user);
+      const newRefreshToken = await this.generateRefreshToken(user);
       console.log('newTokens', newAccessToken, newRefreshToken);
-      entity.refreshToken = newRefreshToken;
-      await entity.save();
+      user.refreshToken = newRefreshToken;
+      await user.save();
       console.log('saved refreshed');
       return { accessToken: newAccessToken, refreshToken: newRefreshToken };
     } catch (error) {
       console.error('Error during refresh token:', error);
       throw new CustomError(error?.message || 'Failed to refresh token', 500);
     }
+
   }
 
-  async verifyPhone(phoneNumber: string, role: string): Promise<any> {
+
+  async verifyPhone(phoneNumber: string): Promise<any> {
     try {
-      let entity;
-      switch (role) {
-        case roles.patient:
-        case roles.patientCare:
-        case roles.admin:
-          entity = await this.userModel.findOne({ phoneNumber: phoneNumber });
-          if (!entity) {
-            throw new CustomError('User not found', 404);
-          }
-          break;
-        case roles.hospital:
-          entity = await this.hospitalModel.findOne({
-            phoneNumber: phoneNumber,
-          });
-          if (!entity) {
-            throw new CustomError('Hospital not found', 404);
-          }
-          break;
-        default:
-          throw new CustomError('Invalid role in refresh token', 400);
+      const user = await this.userModel.findOne({ phoneNumber: phoneNumber });
+      if (!user) {
+        throw new CustomError('User not found', 404);
       }
-      if (entity) {
+      if (user) {
         const message = 'Your Verification Code for Forgot password are : ';
         const verificationCode = await this.twilioService.sendVerificationSms(
-          entity.phoneNumber,
+          user.phoneNumber,
           message,
         );
         if (!verificationCode) {
@@ -243,6 +197,8 @@ export class AuthService {
       );
     }
   }
+
+
 
   async verifyCode(
     phoneNumber: string,
@@ -265,38 +221,17 @@ export class AuthService {
     }
   }
 
-  public async resetPassword(phoneNumber, newPassword, role): Promise<any> {
+  public async resetPassword(phoneNumber, newPassword): Promise<any> {
     try {
       console.log('Entered in update', newPassword);
-
-      let entity;
-      switch (role) {
-        case roles.patient:
-        case roles.patientCare:
-        case roles.admin:
-          entity = await this.userModel.findOneAndUpdate(
-            { phoneNumber: phoneNumber },
-            { password: newPassword },
-            { new: true },
-          );
-          if (!entity) {
-            throw new CustomError('User not found', 404);
-          }
-          break;
-        case roles.hospital:
-          entity = await this.hospitalModel.findOneAndUpdate(
-            { phoneNumber: phoneNumber },
-            { password: newPassword },
-            { new: true },
-          );
-          if (!entity) {
-            throw new CustomError('Hospital not found', 404);
-          }
-          break;
-        default:
-          throw new CustomError('Invalid role', 400);
+      const user = await this.userModel.findOneAndUpdate(
+        { phoneNumber: phoneNumber },
+        { password: newPassword },
+        { new: true },
+      );
+      if (!user) {
+        throw new CustomError('User not found', 404);
       }
-
       return true;
     } catch (error) {
       if (error instanceof CustomError) {

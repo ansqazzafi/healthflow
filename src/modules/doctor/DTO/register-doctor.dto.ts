@@ -64,4 +64,8 @@ export class RegisterDoctorDTO {
     @IsArray()
     @IsOptional() 
     availableHours?: string[];
+
+    @IsString()
+    @IsOptional()
+    hospital?:string
 }

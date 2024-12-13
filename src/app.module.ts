@@ -7,13 +7,13 @@ import { AuthModule } from './modules/auth/auth.module';
 import { TwilioModule } from './modules/twilio/twilio.module';
 import { UserService } from './modules/user/user.service';
 import { SeederService } from './modules/seeder/seeder.service';
-import { User, UserSchema } from './modules/user/user.schema';
+import { DiscriminatorUserModel, User, UserSchema } from './modules/user/user.schema';
 import { UserModule } from './modules/user/user.module';
 import { DoctorModule } from './modules/doctor/doctor.module';
 import { HospitalModule } from './modules/hospital/hospital.module';
 import { AdminModule } from './modules/admin/admin.module';
-import { Doctor, DoctorSchema } from './modules/doctor/doctor.schema';
-import { Hospital, HospitalSchema } from './modules/hospital/hospital.schema';
+import { Appointment, AppointmentSchema } from './modules/appointment/appointment.schema';
+
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -21,16 +21,22 @@ import { Hospital, HospitalSchema } from './modules/hospital/hospital.schema';
     }),
 
     MongooseModule.forRoot(process.env.MONGODB_URI),
-    MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
-    MongooseModule.forFeature([{ name: Doctor.name, schema: DoctorSchema }]),
-    MongooseModule.forFeature([{ name: Hospital.name, schema: HospitalSchema }]),
+    MongooseModule.forFeatureAsync([
+      {
+        name: User.name,
+        useFactory: () => {
+          return UserSchema;
+        },
+        
+      },
+    ]),
+    MongooseModule.forFeature([{ name: Appointment.name, schema: AppointmentSchema }]),
     AuthModule,
     TwilioModule,
-    UserModule,
     DoctorModule,
     HospitalModule,
     AdminModule
   ],
   providers: [ResponseHandler, SeederService],
 })
-export class AppModule {}
+export class AppModule { }

@@ -3,109 +3,158 @@ import { RegisterDoctorDTO } from './DTO/register-doctor.dto';
 import { CustomError } from 'utility/custom-error';
 import { InjectModel } from '@nestjs/mongoose';
 import { ClientSession, Model } from 'mongoose';
-import { Doctor, DoctorDocument } from './doctor.schema';
 import * as bcrypt from 'bcrypt';
 import { AuthService } from '../auth/auth.service';
-import { Hospital, HospitalDocument } from '../hospital/hospital.schema';
 import { TwilioService } from '../twilio/twilio.service';
 import { Specialty } from 'enums/specialty.enum';
 import { gender } from 'enums/gender.enum';
+import { log } from 'node:console';
+import { UpdateDoctorDTO } from './DTO/update-doctor.dto';
+import { UserDocument, User } from '../user/user.schema';
+import { DiscriminatorClass } from '../seeder/discreminator.service';
+import { RegisterDto } from 'DTO/register.dto';
 
 @Injectable()
 export class DoctorService {
   constructor(
-    @InjectModel(Doctor.name) private doctorModel: Model<DoctorDocument>,
-    @InjectModel(Hospital.name) private hospitalModel: Model<HospitalDocument>,
-    private readonly twilioService: TwilioService
+    @InjectModel(User.name) private userModel: Model<UserDocument>,
+    private readonly twilioService: TwilioService,
+    private readonly discreminatorService: DiscriminatorClass
   ) { }
-  public async register(register: RegisterDoctorDTO, HospitalId: string): Promise<any> {
-    console.log("Registered IN D", register);
-    const { degreeId } = register
-    const session = await this.doctorModel.db.startSession();
+  public async register(register: RegisterDto, HospitalId: string): Promise<any> {
+    const { degreeId } = register.doctor;
+    const session = await this.userModel.db.startSession();
     session.startTransaction();
     try {
-      const existingDoctorWithDegree = await this.doctorModel.findOne({
-        degreeId: degreeId,
-      });
+      const { role, ...details } = register;
+      if (!details[role]) {
+        throw new CustomError('Role-specific data is missing for the registration process', 400);
+      }
+      const DoctorData = details[role];
 
-      if (existingDoctorWithDegree) {
-        throw new CustomError('A doctor with the same degreeId is already registered with hospital', 409);
+      const UserModel = this.discreminatorService.discriminatorValidator(role);
+
+      const existingUser = await UserModel.findOne({
+        $or: [{ email: DoctorData.email }, { degreeId: degreeId }],
+      }).session(session);
+
+      if (existingUser) {
+        throw new CustomError(`${role} registration failed: email or degreeId already exists`, 409);
       }
 
-      const newDoctor = new this.doctorModel({
-        ...register,
-        hospital: HospitalId,
+      const newDoctor = new UserModel({
+        ...DoctorData,
       });
+
       await newDoctor.save({ session });
-      const hospitalUpdateResult = await this.hospitalModel.findByIdAndUpdate(
+
+      const hospitalUpdateResult = await this.userModel.findByIdAndUpdate(
         HospitalId,
         { $push: { doctors: newDoctor._id } },
         { session, new: true }
       );
-      console.log("update hospital", hospitalUpdateResult)
 
       if (!hospitalUpdateResult) {
         throw new CustomError('Hospital not found', 404);
       }
+
       await session.commitTransaction();
       session.endSession();
 
       return newDoctor;
     } catch (error) {
-      console.error(error);
+      await session.abortTransaction();
+      session.endSession();
+
+      console.error("Error during doctor registration:", error);
+
       if (error instanceof CustomError) {
         throw error;
       }
+
       throw new CustomError('Error during user registration', 500);
     }
   }
 
-  public async getDoctorsByHospital(
-    id: string,
-    page: number,
-    limit: number,
-    specialty?: Specialty,
-    city?: string,
-    gender?: gender
-  ): Promise<any> {
-    console.log(id, page, limit, specialty, "cred")
-    console.log(typeof (page), typeof (limit))
+
+  public async findDoctors(page: number, limit: number, city: string, specialty?: string, hospitalId?: string, avaliablity?: string): Promise<any> {
     try {
+      const avaliablityArray = []
+      avaliablityArray.push(avaliablity)
+      console.log(avaliablityArray, "arrray");
+
       const skip = (page - 1) * limit;
-      const aggregation = await this.doctorModel.aggregate([
+      const aggregation = await this.userModel.aggregate([
         {
           $match: {
-            hospital: id,
-            ...(specialty && { specialty: specialty.toUpperCase() }),
             ...(city && { 'address.city': city }),
-            ...(gender && { gender: gender.toLowerCase() }),
+            ...(specialty && { specialty: specialty }),
+            ...(hospitalId && { hospital: hospitalId }),
+            ...(avaliablity && { availableDays: { $in: avaliablityArray } }),
           },
         },
         {
           $facet: {
-            doctors: [{ $skip: (page - 1) * limit }, { $limit: limit }],
+            doctors: [{ $skip: skip }, { $limit: limit }],
             totalCount: [{ $count: 'count' }],
           },
         },
       ]);
-
-      console.log(`Pagination: skip = ${skip}, limit = ${limit}`);
-
-      const doctors = aggregation[0]?.doctors || [];
-      const totalCount = aggregation[0]?.totalCount[0]?.count || 0;
-      if (doctors.length === 0) {
-        throw new CustomError("No Doctor found", 404)
+      if (aggregation[0].doctors.length === 0) {
+        throw new CustomError('No Doctor Found', 404);
       }
-
-      return { doctors, totalCount };
+      const result = {
+        doctors: aggregation[0]?.doctors || [],
+        totalCount: aggregation[0]?.totalCount[0]?.count || 0,
+      };
+      return result;
     } catch (error) {
+      console.log(error, 'err');
+
       if (error instanceof CustomError) {
         throw error
       }
-      console.log(error, "hjjj");
-
-      throw new CustomError('There is an error during fetching doctors', 402);
+      throw new CustomError("There is an error during fetching Doctors", 500)
     }
+  }
+
+
+  public async findOne(id: string): Promise<any> {
+    try {
+      const doctor = await this.userModel.findOne({ _id: id }).select('-password -refreshToken');
+      if (!doctor) {
+        throw new CustomError('Doctor not found', 404);
+      }
+      return doctor;
+    } catch (error) {
+      if (error instanceof CustomError) {
+        throw error;
+      }
+      throw new CustomError('there is an error to find doctor', 500);
+    }
+  }
+
+  public async updateDoctorProfile(id: string, updateDto: UpdateDoctorDTO): Promise<any> {
+    try {
+      console.log(updateDto, 'ffff');
+      const updatedDoctor = await this.userModel.findByIdAndUpdate(
+        id,
+        { $set: updateDto },
+        { new: true },
+      );
+
+      if (!updatedDoctor) {
+        throw new CustomError('Doctor not found', 404);
+      }
+
+      return updatedDoctor;
+    } catch (error) {
+      if (error instanceof CustomError) {
+        throw error;
+      }
+      throw new CustomError('There was an error updating the Doctor Profile', 500);
+    }
+
   }
 
 

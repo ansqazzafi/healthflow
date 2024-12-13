@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { UserSchema, User } from '../user/user.schema';
+import { User, UserSchema } from '../user/user.schema';
 import { MongooseModule } from '@nestjs/mongoose';
 import { PatientService } from './patient.service';
 import { ResponseHandler } from 'utility/success-response';

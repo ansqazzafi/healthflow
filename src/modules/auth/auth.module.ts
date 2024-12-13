@@ -16,16 +16,16 @@ import { DoctorModule } from '../doctor/doctor.module';
 import { JwtService } from '@nestjs/jwt';
 import { MiddlewareConsumer } from '@nestjs/common';
 import { JwtMiddleware } from 'middlewares/verify-jwt.middlware';
+import { DiscriminatorClass } from '../seeder/discreminator.service';
 @Module({
   imports: [
     TwilioModule,
     HospitalModule,
     DoctorModule,
-    forwardRef(() => UserModule),
-    forwardRef(() => HospitalModule),
+    UserModule
   ],
   controllers: [AuthController],
-  providers: [ResponseHandler, JwtService, AuthService],
+  providers: [ResponseHandler, JwtService, AuthService, DiscriminatorClass],
   exports: [AuthService],
 })
 export class AuthModule implements NestModule {

@@ -1,22 +1,29 @@
-import { forwardRef, Module } from '@nestjs/common';
-import { Doctor, DoctorSchema } from './doctor.schema';
+import { forwardRef, MiddlewareConsumer, Module, RequestMethod } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { DoctorService } from './doctor.service';
 import { DoctorController } from './doctor.controller';
 import { ResponseHandler } from 'utility/success-response';
-import { Hospital, HospitalSchema } from '../hospital/hospital.schema';
 import { TwilioModule } from '../twilio/twilio.module';
+import { JwtMiddleware } from 'middlewares/verify-jwt.middlware';
+import { UserModule } from '../user/user.module';
+import { JwtService } from '@nestjs/jwt';
+import { DiscriminatorClass } from '../seeder/discreminator.service';
 MongooseModule;
 @Module({
   imports: [
     TwilioModule,
-    MongooseModule.forFeature([{ name: Doctor.name, schema: DoctorSchema }]),
-    MongooseModule.forFeature([
-      { name: Hospital.name, schema: HospitalSchema },
-    ]),
+    UserModule,
   ],
-  providers: [DoctorService, ResponseHandler],
+  providers: [DoctorService, ResponseHandler, JwtService, DiscriminatorClass],
   controllers: [DoctorController],
   exports: [DoctorService],
 })
-export class DoctorModule {}
+export class DoctorModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer
+      .apply(JwtMiddleware)
+      .forRoutes(
+        { path: 'doctor', method: RequestMethod.POST },
+      );
+  }
+}
