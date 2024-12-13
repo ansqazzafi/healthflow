@@ -48,15 +48,16 @@ export class DoctorService {
 
       await newDoctor.save({ session });
 
+      console.log(newDoctor._id, "Id")
+
+
       const hospitalUpdateResult = await this.userModel.findByIdAndUpdate(
         HospitalId,
         { $push: { doctors: newDoctor._id } },
         { session, new: true }
       );
+      console.log("Hospital Updated", hospitalUpdateResult);
 
-      if (!hospitalUpdateResult) {
-        throw new CustomError('Hospital not found', 404);
-      }
 
       await session.commitTransaction();
       session.endSession();

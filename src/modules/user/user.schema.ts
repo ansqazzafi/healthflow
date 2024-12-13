@@ -5,7 +5,7 @@ import { gender } from 'enums/gender.enum';
 import { Specialty } from 'enums/specialty.enum';
 import { address } from 'interfaces/address.interface';
 
-@Schema({ timestamps: true})
+@Schema({ timestamps: true })
 export class User {
   @Prop({ required: true })
   name: string;
@@ -92,7 +92,7 @@ export class Hospital extends User {
   @Prop()
   biography?: string;
 
-  @Prop({ type: [{ type: Types.ObjectId }] })
+  @Prop({ type: [{ type: Types.ObjectId, ref: 'Doctor' }] })
   doctors?: Types.ObjectId[];
 
   @Prop()
