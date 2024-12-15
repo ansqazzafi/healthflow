@@ -19,4 +19,5 @@ import { AuthService } from '../auth/auth.service';
   exports:[UserService, MongooseModule]
 
 })
+
 export class UserModule {}

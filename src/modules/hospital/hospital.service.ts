@@ -15,14 +15,14 @@ export class HospitalService {
   constructor(
     @InjectModel(User.name) private userModel: Model<UserDocument>,
     @InjectModel(Appointment.name)
-    private appointmentModel: Model<AppointmentDocument>
-  ) { }
-
+    private appointmentModel: Model<AppointmentDocument>,
+  ) {}
 
   public async getHospitals(
     page: number,
     limit: number,
     city?: string,
+    name?: string,
   ): Promise<any> {
     try {
       const skip = (page - 1) * limit;
@@ -30,7 +30,15 @@ export class HospitalService {
       const aggregation = await this.userModel.aggregate([
         {
           $match: {
+            role: 'hospital',
+            ...(name && { name: { $regex: name, $options: 'i' } }),
             ...(city && { 'address.city': city }),
+          },
+        },
+        {
+          $project: {
+            password: 0,
+            refreshToken: 0,
           },
         },
         {
@@ -57,76 +65,6 @@ export class HospitalService {
     }
   }
 
-  public async deleteHospital(id: string): Promise<any> {
-    const session = await this.userModel.db.startSession();
-    try {
-      session.startTransaction();
-      const hospital = await this.userModel.findByIdAndDelete(id, {
-        session,
-      });
-      console.log(hospital, 'Hospital---');
-      if (!hospital) {
-        throw new CustomError('No hospital found with the given ID', 404);
-      }
-
-      const deletedDoctors = await this.userModel.deleteMany(
-        { hospital: id },
-        { session },
-      );
-      console.log(deletedDoctors, 'Doctors---');
-      if (deletedDoctors.deletedCount === 0) {
-        console.log('No doctors associated with the hospital');
-      }
-
-      const appointmentsToDelete = await this.appointmentModel.find({
-        hospital: id,
-      });
-      console.log(appointmentsToDelete, 'Appointments---');
-      if (appointmentsToDelete.length > 0) {
-        const deletedAppointmentsIds = appointmentsToDelete.map(
-          (appointment) => appointment._id,
-        );
-        const deletedAppointments = await this.appointmentModel.deleteMany(
-          { hospital: id },
-          { session },
-        );
-        console.log(deletedAppointmentsIds, 'Deleted Appointments---');
-
-        const result = await this.userModel.updateMany(
-          {
-            appointmentRecords: { $in: deletedAppointmentsIds },
-          },
-          {
-            $pull: {
-              appointmentRecords: { $in: deletedAppointmentsIds },
-            },
-          },
-          { session },
-        );
-
-        if (result.modifiedCount === 0) {
-          console.log('No users updated for deleted appointments');
-        }
-      } else {
-        console.log('No appointments found to delete');
-      }
-
-      await session.commitTransaction();
-      return true;
-    } catch (error) {
-      console.log('Error:', error);
-      await session.abortTransaction();
-      if (error instanceof CustomError) {
-        throw error;
-      }
-      throw new CustomError(
-        'There was an error during the deletion of the hospital',
-        500,
-      );
-    } finally {
-      session.endSession();
-    }
-  }
   public async updateProfile(
     id: string,
     updateDto: UpdateHospitalDTO,
@@ -134,11 +72,11 @@ export class HospitalService {
     try {
       console.log(updateDto, 'ffff');
 
-      const updatedHospital = await this.userModel.findByIdAndUpdate(
-        id,
-        { $set: updateDto },
-        { new: true },
-      );
+      const updatedHospital = await this.userModel
+        .findByIdAndUpdate(id, { $set: updateDto }, { new: true })
+        .select(
+          '-availableDays -availableHours -degree -queries -password -refreshToken',
+        );
 
       if (!updatedHospital) {
         throw new CustomError('Hospital not found', 404);
@@ -154,7 +92,11 @@ export class HospitalService {
   }
   public async findOne(id: string): Promise<any> {
     try {
-      const hospital = await this.userModel.findOne({ _id: id });
+      const hospital = await this.userModel
+        .findOne({ _id: id })
+        .select(
+          '-availableDays -availableHours -degree -queries -password -refreshToken',
+        );
       if (!hospital) {
         throw new CustomError('Hospital not found', 404);
       }
@@ -164,6 +106,76 @@ export class HospitalService {
         throw error;
       }
       throw new CustomError('there is an error to find hospital', 500);
+    }
+  }
+
+  public async deleteHospital(id: string): Promise<boolean> {
+    const session = await this.userModel.db.startSession();
+    try {
+      session.startTransaction();
+
+      const hospital = await this.userModel.findOneAndDelete(
+        { _id: id },
+        { session },
+      );
+      if (!hospital) {
+        throw new CustomError('No hospital found with the given ID', 404);
+      }
+
+      const { deletedCount: deletedDoctorsCount } =
+        await this.userModel.deleteMany({ hospital: id }, { session });
+      if (deletedDoctorsCount === 0) {
+       throw new CustomError('No doctors associated with the hospital',401);
+      }
+
+      const appointmentsToDelete = await this.appointmentModel
+        .find({ hospital: id }, { _id: 1 })
+        .session(session);
+      const deletedAppointmentsIds = appointmentsToDelete.map((app) =>
+        app._id.toString(),
+      );
+      console.log(deletedAppointmentsIds[0], 'idd');
+
+      if (deletedAppointmentsIds.length > 0) {
+       const deletedAppointmentCount=  await this.appointmentModel.deleteMany(
+          { hospital: id },
+          { session },
+        );
+        if(deletedAppointmentCount.deletedCount === 0){
+          throw new CustomError('No Appointment to deleted',401);
+        }
+
+        const result = await this.userModel.updateMany(
+          { appointmentRecords: { $in: deletedAppointmentsIds } },
+          { $pull: { appointmentRecords: { $in: deletedAppointmentsIds } } },
+          { session },
+        );
+        console.log(result.modifiedCount, 'modifiedCOunt');
+
+        if (result.modifiedCount === 0) {
+          throw new CustomError(
+            'No users updated for deleted appointments',
+            404,
+          );
+        }
+      } else {
+        console.log('No appointments found to delete');
+      }
+
+      await session.commitTransaction();
+      return true;
+    } catch (error) {
+      console.error('Error:', error);
+      await session.abortTransaction();
+      if (error instanceof CustomError) {
+        throw error;
+      }
+      throw new CustomError(
+        'There was an error during the deletion of the hospital',
+        500,
+      );
+    } finally {
+      session.endSession();
     }
   }
 }

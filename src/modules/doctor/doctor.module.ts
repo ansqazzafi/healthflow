@@ -23,6 +23,7 @@ export class DoctorModule {
       .apply(JwtMiddleware)
       .forRoutes(
         { path: 'doctor', method: RequestMethod.POST },
+        { path: 'doctor', method: RequestMethod.PATCH },
       );
   }
 }

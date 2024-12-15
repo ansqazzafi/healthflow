@@ -13,6 +13,11 @@ import { DoctorModule } from './modules/doctor/doctor.module';
 import { HospitalModule } from './modules/hospital/hospital.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { Appointment, AppointmentSchema } from './modules/appointment/appointment.schema';
+import { PatientModule } from './modules/patient/patient.module';
+import { PatientCareModule } from './modules/patient-care/patient-care.module';
+import { BankDetailsController } from './bank-details/bank-details.controller';
+import { BankDetailsService } from './bank-details/bank-details.service';
+import { AppointmentModule } from './modules/appointment/appointment.module';
 
 @Module({
   imports: [
@@ -27,8 +32,12 @@ import { Appointment, AppointmentSchema } from './modules/appointment/appointmen
     TwilioModule,
     DoctorModule,
     HospitalModule,
-    AdminModule
+    AdminModule,
+    PatientModule,
+    PatientCareModule,
+    AppointmentModule
   ],
-  providers: [ResponseHandler, SeederService],
+  providers: [ResponseHandler, SeederService, BankDetailsService],
+  controllers: [BankDetailsController],
 })
 export class AppModule { }

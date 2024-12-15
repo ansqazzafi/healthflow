@@ -10,5 +10,4 @@ export enum AppointmentStatus {
 export enum AppointmentType {
   Online = "Online",
   Physical = "Physical",
-
 }

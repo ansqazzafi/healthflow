@@ -76,14 +76,11 @@ export class User extends Document implements IUser {
   @Prop()
   availableHours?: string[];
 
-  @Prop({ unique: true })
+  @Prop()
   medicalLicense?: string;
 
   @Prop()
   CEO?: string;
-
-  @Prop()
-  hospitalBiography?: string;
 
   @Prop({ type: [{ type: Types.ObjectId }] })
   doctors?: Types.ObjectId[];
@@ -108,11 +105,9 @@ export class User extends Document implements IUser {
 export const UserSchema = SchemaFactory.createForClass(User);
 export type UserDocument = User & Document;
 
-
 UserSchema.pre('save', function (next) {
   const user = this;
 
-  // Remove empty arrays
   if (Array.isArray(user.degree) && user.degree.length === 0) {
     user.degree = undefined;
   }
@@ -143,6 +138,7 @@ UserSchema.pre('save', function (next) {
 
   if (Array.isArray(user.queries) && user.queries.length === 0) {
     user.queries = undefined;
+
   }
 
   // Call next() to proceed with the save operation

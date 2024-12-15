@@ -31,4 +31,3 @@ export interface IUser {
   service?: string;
   queries?: { patientId: Types.ObjectId; messageQuery: string }[];
 }
-

@@ -33,6 +33,7 @@ export class HospitalController {
 
   @Get()
   public async findHospitals(
+    @Query('name') name?:string,
     @Query('page') page: string = '1',
     @Query('limit') limit: string = '10',
     @Query('city') city?: string,
@@ -43,6 +44,7 @@ export class HospitalController {
       newPage,
       newLimit,
       city,
+      name
     );
     return this.responseHandler.successHandler(
       response,

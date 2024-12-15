@@ -24,13 +24,16 @@ export class Appointment {
   status?: AppointmentStatus;
 
   @Prop({ required: false })
-  reason?: string;
+  cancelledReason?: string;
 
   @Prop({ required: false })
   feedback?: string;
 
   @Prop({ required: false })
   prescription?: string;
+
+  @Prop({ required: false })
+  description?: string;
 
   @Prop({ required: false, enum: AppointmentType, })
   Type?: AppointmentType;

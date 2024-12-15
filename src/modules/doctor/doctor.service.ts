@@ -13,6 +13,7 @@ import { UpdateDoctorDTO } from './DTO/update-doctor.dto';
 import { UserDocument, User } from '../user/user.schema';
 
 import { RegisterDto } from 'DTO/register.dto';
+import { Types } from 'twilio/lib/rest/content/v1/content';
 
 @Injectable()
 export class DoctorService {
@@ -24,26 +25,25 @@ export class DoctorService {
     register: RegisterDto,
     HospitalId: string,
   ): Promise<any> {
-    const { degreeId } = register.doctor;
     const session = await this.userModel.db.startSession();
     session.startTransaction();
     try {
       const { role, ...details } = register;
-      if (!details[role]) {
+      if (!details.doctor) {
         throw new CustomError(
           'Role-specific data is missing for the registration process',
           400,
         );
       }
-      const DoctorData = details[role];
+      const DoctorData = details.doctor;
 
-      const existingUser = await this.userModel
+      const existingDoctor = await this.userModel
         .findOne({
-          $or: [{ email: DoctorData.email }, { degreeId: degreeId }],
+          $or: [{ email: DoctorData.email }, { degreeId: DoctorData.degreeId }],
         })
         .session(session);
 
-      if (existingUser) {
+      if (existingDoctor) {
         throw new CustomError(
           `${role} registration failed: email or degreeId already exists`,
           409,
@@ -55,14 +55,14 @@ export class DoctorService {
       });
 
       const savedDoctor = await newDoctor.save({ session });
+      console.log(savedDoctor._id);
 
       const hospital = await this.userModel.findByIdAndUpdate(HospitalId, {
         $push: { doctors: savedDoctor._id },
       });
       // if (!hospital.doctors.includes(savedDoctor._id)) {
-      //   throw new CustomError('docter are  not added', 404);
+      //   throw new CustomError("Hospital couldn't add doctor", 401);
       // }
-
       await session.commitTransaction();
       session.endSession();
 
@@ -88,6 +88,7 @@ export class DoctorService {
     specialty?: string,
     hospitalId?: string,
     avaliablity?: string,
+    name?:string
   ): Promise<any> {
     try {
       const avaliablityArray = [];
@@ -98,6 +99,8 @@ export class DoctorService {
       const aggregation = await this.userModel.aggregate([
         {
           $match: {
+            role: 'doctor',
+            ...(name && { name: { $regex: name, $options: 'i' } }),
             ...(city && { 'address.city': city }),
             ...(specialty && { specialty: specialty }),
             ...(hospitalId && { hospital: hospitalId }),
@@ -133,7 +136,7 @@ export class DoctorService {
     try {
       const doctor = await this.userModel
         .findOne({ _id: id })
-        .select('-password -refreshToken');
+        .select('-password -refreshToken -doctors -departments -queries');
       if (!doctor) {
         throw new CustomError('Doctor not found', 404);
       }
@@ -156,7 +159,9 @@ export class DoctorService {
         id,
         { $set: updateDto },
         { new: true },
-      );
+      ).select(
+        '-degree -password -refreshToken -doctors -departments',
+      );;
 
       if (!updatedDoctor) {
         throw new CustomError('Doctor not found', 404);

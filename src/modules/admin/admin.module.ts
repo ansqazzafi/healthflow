@@ -1,4 +1,4 @@
-import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule, RequestMethod } from '@nestjs/common';
 import { User } from '../user/user.schema';
 import { MongooseModule } from '@nestjs/mongoose';
 import { AdminService } from './admin.service';
@@ -17,6 +17,9 @@ export class AdminModule implements NestModule{
   configure(consumer: MiddlewareConsumer) {
     consumer
       .apply(JwtMiddleware)
-      .forRoutes('admin/verify');
+       .forRoutes(
+        { path: 'admin', method: RequestMethod.PATCH },
+        { path: 'admin/verify', method: RequestMethod.POST }
+       );
   }
  }

@@ -5,7 +5,7 @@ export class VerifyAdminGuard implements CanActivate {
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
     if (!request.user) {
-      throw new UnauthorizedException('User not authenticated');
+      throw new UnauthorizedException('Admin not authenticated');
     }
     if (request.user.isAdmin !== true) {
       throw new ForbiddenException('Access restricted to admins');
