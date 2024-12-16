@@ -108,3 +108,54 @@ Users can register as the following types:
 - **Payment Gateway Integration:** Stripe (for online appointment payments)
 - **Authentication:** JWT (JSON Web Tokens)
 
+
+
+Got it! If the `role` should be outside of the hospital registration object, here's the corrected version of the **POST /auth/register** endpoint with the `role` placed outside the hospital registration data.
+
+---
+
+### Authentication Endpoints
+
+1. **POST /auth/register**
+   - **Description**: Registers a new user. The password is hashed before storing.
+   - **Request Body for Hospital**: 
+     ```json
+     {
+       "role": "hospital",
+       "hospital": {
+         "name": "City Hospital",
+         "email": "contact@cityhospital.com",
+         "password": "password123",
+         "phoneNumber": "+1234567890",
+         "address": {
+           "country": "USA",
+           "city": "New York"
+         },
+         "medicalLicense": "XYZ123456789",
+         "CEO": "Dr. John Doe",
+         "biography": "A leading hospital providing excellent care to the community.",
+         "departments": ["Cardiology", "Neurology", "Orthopedics"],
+         "profilePicture": "https://example.com/profile.jpg"
+       }
+     }
+     ```
+   - **Request Body for Patient**: 
+     ```json
+     {
+       "role": "patient",
+       "patient": {
+         "name": "John Doe",
+  "email": "john.doe@example.com",
+  "password": "password123",
+  "address": {
+    "country": "USA",
+    "city": "New York"
+  },
+  "phoneNumber": "+1234567890",
+  "gender": "MALE",
+  "profilePicture": "https://example.com/profile.jpg"
+       }
+     }
+     ```
+  
+  

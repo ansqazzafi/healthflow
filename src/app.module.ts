@@ -15,9 +15,10 @@ import { AdminModule } from './modules/admin/admin.module';
 import { Appointment, AppointmentSchema } from './modules/appointment/appointment.schema';
 import { PatientModule } from './modules/patient/patient.module';
 import { PatientCareModule } from './modules/patient-care/patient-care.module';
-import { BankDetailsController } from './bank-details/bank-details.controller';
-import { BankDetailsService } from './bank-details/bank-details.service';
 import { AppointmentModule } from './modules/appointment/appointment.module';
+import { DepartmentController } from './modules/department/department.controller';
+import { DepartmentService } from './modules/department/department.service';
+import { DepartmentModule } from './modules/department/department.module';
 
 @Module({
   imports: [
@@ -35,9 +36,9 @@ import { AppointmentModule } from './modules/appointment/appointment.module';
     AdminModule,
     PatientModule,
     PatientCareModule,
-    AppointmentModule
+    AppointmentModule,
+    DepartmentModule
   ],
-  providers: [ResponseHandler, SeederService, BankDetailsService],
-  controllers: [BankDetailsController],
+  providers: [ResponseHandler, SeederService, DepartmentService]
 })
 export class AppModule { }

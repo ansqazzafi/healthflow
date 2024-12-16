@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Patch, Post, Req } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post, Query, Req } from '@nestjs/common';
 import { AppointmentService } from './appointment.service';
 import { SuccessHandler } from 'interfaces/success-handler.interface';
 import { BookAppointmentDto } from './DTO/book-appointment.dto';
@@ -86,5 +86,22 @@ export class AppointmentController {
       true,
       `Appointment ${status} successfully`,
     );
+  }
+
+  @Get()
+  public async findAppointments(
+    @Req() req:Request,
+    @Query('page') page:string = '1',
+    @Query('limit') limit:string = '10',
+    @Query('date') date?:string 
+  ):Promise<SuccessHandler<any>>{
+    const {id, role} = req.user 
+    const newPage = parseInt(page)
+    const newLimit = parseInt(limit)
+    const newDate = date ? new Date(date) : null;
+    console.log(id, role , newPage, newLimit, date, "Credentialsss");
+    
+    const response = await this.appointmentService.findAppointments(id, role, newPage, newLimit, newDate)
+    return this.responseHandler.successHandler(response, "Appointments Found Successfully")
   }
 }

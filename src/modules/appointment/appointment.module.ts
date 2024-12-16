@@ -19,16 +19,17 @@ MongooseModule;
   ],
   controllers: [AppointmentController],
   providers: [AppointmentService, ResponseHandler, JwtService],
-  exports:[AppointmentService]
+  exports: [AppointmentService]
 })
 
 export class AppointmentModule {
-   configure(consumer: MiddlewareConsumer) {
-      consumer
-        .apply(JwtMiddleware)
-        .forRoutes(
-          { path: 'appointment/:hospitalId/:doctorId', method: RequestMethod.POST },
-          { path: 'appointment/:appointmentId/:status', method: RequestMethod.PATCH }
-        );
-    }
+  configure(consumer: MiddlewareConsumer) {
+    consumer
+      .apply(JwtMiddleware)
+      .forRoutes(
+        { path: 'appointment/:hospitalId/:doctorId', method: RequestMethod.POST },
+        { path: 'appointment/:appointmentId/:status', method: RequestMethod.PATCH },
+        { path: 'appointment', method: RequestMethod.GET },
+      );
+  }
 }

@@ -6,8 +6,10 @@ import { ResponseHandler } from 'utility/success-response';
 import { AdminController } from './admin.controller';
 import { JwtMiddleware } from 'middlewares/verify-jwt.middlware';
 import { JwtService } from '@nestjs/jwt';
+import { TwilioModule } from '../twilio/twilio.module';
 @Module({
   imports: [
+    TwilioModule,
     MongooseModule.forFeature([{ name: User.name, schema: User }]),
   ],
   providers: [AdminService, ResponseHandler, JwtService],
@@ -19,7 +21,7 @@ export class AdminModule implements NestModule{
       .apply(JwtMiddleware)
        .forRoutes(
         { path: 'admin', method: RequestMethod.PATCH },
-        { path: 'admin/verify', method: RequestMethod.POST }
+        { path: 'admin/accounts/verify', method: RequestMethod.POST }
        );
   }
  }

@@ -46,7 +46,7 @@ export class RegisterDoctorDTO {
     profilePicture: string;
 
     @IsString()
-    @IsOptional() 
+    @IsOptional()
     biography?: string;
 
     @IsEnum(Specialty)
@@ -55,17 +55,21 @@ export class RegisterDoctorDTO {
 
     @IsString()
     @IsNotEmpty()
-    degreeId:string
+    degreeId: string
 
     @IsArray()
-    @IsOptional() 
+    @IsNotEmpty()
+    degree: string[]
+
+    @IsArray()
+    @IsOptional()
     availableDays?: string[];
 
     @IsArray()
-    @IsOptional() 
+    @IsOptional()
     availableHours?: string[];
 
     @IsString()
     @IsOptional()
-    hospital?:string
+    hospital?: string
 }

@@ -11,6 +11,7 @@ import {
 import { Type } from 'class-transformer';
 import { address } from 'interfaces/address.interface';
 import { gender } from 'enums/gender.enum';
+import {HospitalDepartment} from 'enums/departments.enum'
 class AddressDto {
   @IsString()
   @IsNotEmpty()
@@ -56,8 +57,8 @@ export class RegisterHospitalDTO {
   biography?: string;
 
   @IsOptional()
-  @IsString({ each: true })
-  departments?: string[];
+  @IsEnum(HospitalDepartment)
+  departments?: HospitalDepartment[];
 
   @IsOptional()
   @IsString()

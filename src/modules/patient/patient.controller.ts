@@ -23,7 +23,7 @@ export class PatientController {
   ) {}
 
   @Get()
-  // @UseGuards(VerifyAdminGuard)
+  @UseGuards(VerifyAdminGuard)
   public async findPatients(
     @Query('name') name?: string,
     @Query('page') page: string = '1',
@@ -31,7 +31,6 @@ export class PatientController {
     @Query('city') city?: string,
   ): Promise<SuccessHandler<any>> {
     console.log('entered');
-
     console.log(page, limit, city);
     const newPage = parseInt(page, 10);
     const newLimit = parseInt(limit, 10);

@@ -6,12 +6,14 @@ import { CustomError } from 'utility/custom-error';
 import { JwtService } from '@nestjs/jwt';
 import { roles } from 'enums/role.enum';
 import { UpdateAdminDTO } from './DTO/updatedto copy';
+import { TwilioService } from '../twilio/twilio.service';
 @Injectable()
 export class AdminService {
   constructor(
     @InjectModel(User.name) private userModel: Model<UserDocument>,
     private readonly jwtService: JwtService,
-  ) {}
+    private readonly twilioService: TwilioService
+  ) { }
 
   public async verifyAccount(Id: string): Promise<any> {
     const user = await this.userModel.findById(Id);
@@ -23,7 +25,11 @@ export class AdminService {
       throw new CustomError('This account is already verified', 400);
     }
     user.isActive = true;
-    await user.save();
+    const updateUser = await user.save();
+    if(updateUser.isActive !== true){
+      throw new CustomError("Unable to verify account")
+    }
+    await this.twilioService.sendMessage(user.phoneNumber, `Your Account corresponding ${user.email} at HealthFlow are Activated Successfully, Now you can login your account`)
     return { message: `User account verified successfully!` };
   }
 

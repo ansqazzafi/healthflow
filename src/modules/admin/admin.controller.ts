@@ -16,6 +16,7 @@ export class AdminController {
   @Post('accounts/verify')
   @UseGuards(VerifyAdminGuard)
   async verifyAccount(@Body() body: { Id: string }) {
+    console.log("Enrere", body);
     console.log('Request received:', body);
     const { Id } = body;
     const result = await this.adminService.verifyAccount(Id);

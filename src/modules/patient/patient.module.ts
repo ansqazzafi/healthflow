@@ -24,6 +24,11 @@ export class PatientModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     consumer
       .apply(JwtMiddleware)
-      .forRoutes({ path: 'patient', method: RequestMethod.PATCH });
+      .forRoutes(
+        { path: 'patient', method: RequestMethod.PATCH },
+        { path: 'patient/:id', method: RequestMethod.GET },
+        { path: 'patient', method: RequestMethod.GET },
+
+      );
   }
 }

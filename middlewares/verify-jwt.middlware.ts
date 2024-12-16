@@ -41,7 +41,6 @@ export class JwtMiddleware implements NestMiddleware {
             if (!user) {
                 throw new CustomError("Invalid Access Token or user not found", 401);
             }
-
             req.user = user;
             next();
         } catch (error) {

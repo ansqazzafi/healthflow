@@ -13,6 +13,7 @@ import { Model } from 'mongoose';
 import { roles } from 'enums/role.enum';
 import { response } from 'express';
 import * as bcrypt from 'bcrypt'
+import { log } from 'node:console';
 @Injectable()
 export class AuthService {
   constructor(
@@ -46,6 +47,11 @@ export class AuthService {
   public async register(RegisterDto: any): Promise<boolean> {
     try {
       const { role, ...details } = RegisterDto;
+      console.log(RegisterDto, "DTO");
+      
+      if (role === roles.doctor) {
+        throw new CustomError("Only hospital can register doctor")
+      }
       console.log(details, "details");
       const roleData = details[role];
       const email = roleData.email;

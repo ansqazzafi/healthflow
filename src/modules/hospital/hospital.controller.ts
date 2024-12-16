@@ -80,6 +80,8 @@ export class HospitalController {
     @Req() req: Request,
   ): Promise<SuccessHandler<any>> {
     const { id, role } = req.user;
+    console.log("Entered In Updae", id, role);
+    
     if (role !== 'hospital') {
       throw new CustomError('Cannot delete the hospital');
     }
