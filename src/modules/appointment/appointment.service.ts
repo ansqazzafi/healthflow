@@ -12,6 +12,9 @@ import { TwilioService } from '../twilio/twilio.service';
 import { stat } from 'fs';
 import { CANCELLED } from 'dns';
 import { identity } from 'rxjs';
+import { strict } from 'assert';
+import { UpdateDoctorDTO } from '../doctor/DTO/update-doctor.dto';
+import { UpdateAppointment } from './DTO/update-appointment-details';
 
 @Injectable()
 export class AppointmentService {
@@ -20,11 +23,11 @@ export class AppointmentService {
     private appointmentModel: Model<AppointmentDocument>,
     @InjectModel(User.name) private userModel: Model<any>,
     private readonly twilioService: TwilioService,
-  ) { }
+  ) {}
 
-  public async updateAppointment(
+  public async updateAppointmentStatus(
     userId: string,
-    role: string,
+    role: roles,
     appointmentId: string,
     status: AppointmentStatus,
     reason?: string,
@@ -41,8 +44,7 @@ export class AppointmentService {
           { $set: { status: status } },
           { new: true },
         );
-      }
-      else if (role === 'patientCare') {
+      } else if (role === 'patientCare') {
         updatedAppointment = await this.appointmentModel.findOneAndUpdate(
           {
             _id: new Types.ObjectId(appointmentId),
@@ -50,8 +52,7 @@ export class AppointmentService {
           { $set: { status: status } },
           { new: true },
         );
-      }
-      else if (role === 'patient') {
+      } else if (role === 'patient') {
         if (status !== AppointmentStatus.CANCELLED) {
           throw new CustomError(
             'Patients can only cancel their own appointment',
@@ -100,9 +101,9 @@ export class AppointmentService {
       const sendMessage = await this.twilioService.sendMessage(
         patientPhoneNumber,
         `Your appointment with Dr. ${doctorName} at ${hospitalName} has been ${status}.` +
-        (status === AppointmentStatus.CANCELLED && reason
-          ? ` Reason: ${reason}`
-          : ''),
+          (status === AppointmentStatus.CANCELLED && reason
+            ? ` Reason: ${reason}`
+            : ''),
       );
 
       if (!sendMessage) {
@@ -167,14 +168,16 @@ export class AppointmentService {
     }
   }
 
-
-  public async findAppointments(id: string, role: string, page: number, limit: number, date?: Date): Promise<any> {
+  public async findAppointments(
+    id: string,
+    role: roles,
+    page: number,
+    limit: number,
+    date?: Date,
+  ): Promise<any> {
     try {
-      // Pagination logic
       const skip = (page - 1) * limit;
-  
-      // Aggregate query to handle role-based filtering, date filtering, and pagination
-      const objId = new Types.ObjectId(id)
+      const objId = new Types.ObjectId(id);
       const aggregation = await this.appointmentModel.aggregate([
         {
           $match: {
@@ -192,17 +195,12 @@ export class AppointmentService {
         },
         {
           $facet: {
-            appointments: [
-              { $skip: skip },  
-              { $limit: limit },  
-            ],
-            totalCount: [
-              { $count: 'count' }, 
-            ],
+            appointments: [{ $skip: skip }, { $limit: limit }],
+            totalCount: [{ $count: 'count' }],
           },
         },
       ]);
-  
+
       if (aggregation[0].appointments.length === 0) {
         throw new CustomError('No appointments found', 404);
       }
@@ -211,7 +209,7 @@ export class AppointmentService {
         appointments: aggregation[0]?.appointments || [],
         totalCount: aggregation[0]?.totalCount[0]?.count || 0,
       };
-  
+
       return result;
     } catch (error) {
       if (error instanceof CustomError) {
@@ -220,9 +218,52 @@ export class AppointmentService {
       throw new CustomError('There is an error finding the appointments', 500);
     }
   }
-  
 
+  public async findOne(
+    id: string,
+    role: roles,
+    appointmentId: string,
+  ): Promise<any> {
+    try {
+      if (!Types.ObjectId.isValid(appointmentId)) {
+        throw new CustomError('Invalid appointment ID format', 400);
+      }
+      const aggregation = await this.appointmentModel.aggregate([
+        {
+          $match: {
+            _id: new Types.ObjectId(appointmentId),
+            ...(role === roles.patient && { patient: new Types.ObjectId(id) }),
+            ...(role === roles.hospital && {
+              hospital: new Types.ObjectId(id),
+            }),
+            ...(role === roles.doctor && { doctor: new Types.ObjectId(id) }),
+            ...(role === roles.admin || role === roles.patientCare ? {} : null),
+          },
+        },
+      ]);
+      console.log('error', aggregation);
 
+      if (aggregation.length === 0) {
+        console.log(aggregation.length, 'Length ');
+
+        throw new CustomError(
+          'You are not authorized to access this appointment',
+          403,
+        );
+      }
+
+      return aggregation[0];
+    } catch (error) {
+      console.log('Error details:', error);
+      if (error instanceof CustomError) {
+        throw error;
+      }
+      throw new CustomError(
+        'There is an error while finding the Appointment',
+        500,
+      );
+    }
+  }
 
   private async physicalAppointment(
     patientId: string,
@@ -246,14 +287,16 @@ export class AppointmentService {
       const appointment = await newAppointment.save({ session });
       console.log('Appointment successfully created:', appointment);
 
-      const checkIds = await this.userModel.findById(doctorId)
+      const checkIds = await this.userModel.findById(doctorId);
       console.log(checkIds, 'idss');
-      console.log(checkIds.hospital, "Compare", hospitalId);
+      console.log(checkIds.hospital, 'Compare', hospitalId);
 
       if (checkIds.hospital !== hospitalId) {
-        throw new CustomError("Doctor and Hospital are not associated with Each Other", 402)
+        throw new CustomError(
+          'Doctor and Hospital are not associated with Each Other',
+          402,
+        );
       }
-
 
       const updateResults = await Promise.all([
         this.userModel.updateOne(
@@ -286,12 +329,10 @@ export class AppointmentService {
       return appointment;
     } catch (error) {
       if (error instanceof CustomError) {
-        throw error
+        throw error;
       }
       console.error('Error while booking physical appointment:', error);
       throw new CustomError('Error while booking physical appointment', 500);
     }
   }
-
-
 }
