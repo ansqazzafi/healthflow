@@ -2,7 +2,7 @@ import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { RegisterDoctorDTO } from './DTO/register-doctor.dto';
 import { CustomError } from 'utility/custom-error';
 import { InjectModel } from '@nestjs/mongoose';
-import { ClientSession, Model, ObjectId } from 'mongoose';
+import mongoose, { ClientSession, Model, ObjectId } from 'mongoose';
 import * as bcrypt from 'bcrypt';
 import { AuthService } from '../auth/auth.service';
 import { TwilioService } from '../twilio/twilio.service';
@@ -11,16 +11,21 @@ import { gender } from 'enums/gender.enum';
 import { log } from 'node:console';
 import { UpdateDoctorDTO } from './DTO/update-doctor.dto';
 import { UserDocument, User } from '../user/user.schema';
-
+import { deletedDoctorMessage } from 'utility/deleted-doctor-message'
 import { RegisterDto } from 'DTO/register.dto';
 import { Types } from 'twilio/lib/rest/content/v1/content';
+import { Appointment, AppointmentDocument } from '../appointment/appointment.schema';
+import { NodemailerModule } from 'src/nodemailer/nodemailer.module';
+import { NodemailerService } from 'src/nodemailer/nodemailer.service';
 
 @Injectable()
 export class DoctorService {
   constructor(
     @InjectModel(User.name) private userModel: Model<UserDocument>,
+    @InjectModel(Appointment.name) private appointmentModel: Model<AppointmentDocument>,
     private readonly twilioService: TwilioService,
-  ) {}
+    private readonly nodemailerService: NodemailerService,
+  ) { }
   public async register(
     register: RegisterDto,
     HospitalId: string,
@@ -28,7 +33,9 @@ export class DoctorService {
     const session = await this.userModel.db.startSession();
     session.startTransaction();
     try {
+      const { password } = register.doctor
       const { role, ...details } = register;
+      register.doctor.password = await bcrypt.hash(password, 10);
       if (!details.doctor) {
         throw new CustomError(
           'Role-specific data is missing for the registration process',
@@ -60,9 +67,9 @@ export class DoctorService {
       const hospital = await this.userModel.findByIdAndUpdate(HospitalId, {
         $push: { doctors: savedDoctor._id },
       });
-      // if (!hospital.doctors.includes(savedDoctor._id)) {
-      //   throw new CustomError("Hospital couldn't add doctor", 401);
-      // }
+      await this.nodemailerService.sendMail(savedDoctor.email, 'Congrates', `Congragulation ${hospital.name} are hired you. We hope this will be pleasure for you.Your temporary accounts details are:
+        email:${savedDoctor.email}
+        password:${password} `, savedDoctor.name)
       await session.commitTransaction();
       session.endSession();
 
@@ -88,7 +95,7 @@ export class DoctorService {
     specialty?: string,
     hospitalId?: string,
     avaliablity?: string,
-    name?:string
+    name?: string
   ): Promise<any> {
     try {
       const avaliablityArray = [];
@@ -176,6 +183,89 @@ export class DoctorService {
         'There was an error updating the Doctor Profile',
         500,
       );
+    }
+  }
+
+  public async deleteDoctor(hospitalId: string, doctorId: string): Promise<any> {
+    const session = await this.userModel.db.startSession();
+
+    try {
+      session.startTransaction();
+      const deletedDoctor = await this.userModel.findByIdAndDelete(doctorId).session(session);
+      if (!deletedDoctor) {
+        throw new CustomError("Doctor does not exist", 404);
+      }
+
+      const hospital = deletedDoctor.hospital;
+      console.log(hospital, "compare", hospitalId)
+      if (hospital.toString() !== hospitalId) {
+        throw new Error("The provided hospital ID does not match the record");
+      }
+
+      const deletedDoctorFromHospital = await this.userModel.findByIdAndUpdate(
+        hospitalId,
+        { $pull: { doctors: deletedDoctor._id } },
+        { session }
+      );
+      if (!deletedDoctorFromHospital) {
+        throw new CustomError("Unable to remove doctor from hospital", 500);
+      }
+      const appointmentsToDelete = await this.appointmentModel.find({ doctor: new mongoose.Types.ObjectId(doctorId) });
+      if (appointmentsToDelete.length > 0) {
+        const appointmentIdsToDelete = appointmentsToDelete.map(appointment => appointment._id);
+        const patientIds = appointmentsToDelete.map(appointment => appointment.patient);
+        const patients = await this.userModel.find({ _id: { $in: patientIds } });
+        const patientNameAndEmail = patients.map(patient => ({
+          name: patient.name,
+          email: patient.email
+        }));
+        console.log(patientNameAndEmail, "number")
+        const deletedAppointments = await this.appointmentModel.deleteMany(
+          { _id: { $in: appointmentIdsToDelete } },
+          { session }
+        );
+        if (deletedAppointments.deletedCount === 0) {
+          throw new CustomError("No appointments found for this doctor", 404);
+        }
+
+        const updateDoctorAppointments = await this.userModel.updateMany(
+          { appointmentRecords: { $in: appointmentIdsToDelete } },
+          { $pull: { appointmentRecords: { $in: appointmentIdsToDelete } } },
+          { session }
+        );
+        if (updateDoctorAppointments.modifiedCount === 0) {
+          throw new CustomError("Unable to update appointment records for the doctor", 500);
+        }
+        await session.commitTransaction();
+        const messageForDoctor = deletedDoctorMessage(deletedDoctor.name, deletedDoctorFromHospital.name)
+        await this.nodemailerService.sendMail(deletedDoctor.email, "Alert", messageForDoctor, deletedDoctor.name)
+        const messageForPatients = "We regret to inform you that your appointment with the doctor has been canceled. Please contact us for rescheduling.";
+        for (const EmailAndName of patientNameAndEmail) {
+          await this.nodemailerService.sendMail(EmailAndName.email, 'Cancelled Appointment', `We regret to inform you that your appointments with the doctor ${deletedDoctor.name} has been cancelled due to doctor are no longer available at ${deletedDoctorFromHospital.name}. Please Rescedule your appointment to other avaliable doctor`, EmailAndName.name)
+        }
+        return { message: "Doctor and associated records deleted successfully" };
+      }
+      else {
+        const messageForDoctor = deletedDoctorMessage(deletedDoctor.name, deletedDoctorFromHospital.name)
+        console.log(messageForDoctor, "message For Doctor");
+        console.log(deletedDoctor.phoneNumber, deletedDoctorFromHospital.name, "check cred For Doctor");
+        await this.nodemailerService.sendMail(deletedDoctor.email, "Alert", messageForDoctor, deletedDoctor.name)
+        await session.commitTransaction();
+        return { message: "Doctor and associated records deleted successfully" };
+      }
+    } catch (error) {
+      await session.abortTransaction();
+      console.log(error);
+
+      if (error instanceof CustomError) {
+        throw error;
+      }
+
+      throw new CustomError("There was an error deleting the doctor", 500);
+
+    } finally {
+
+      session.endSession();
     }
   }
 }

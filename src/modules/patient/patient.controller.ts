@@ -7,6 +7,7 @@ import {
   Body,
   Req,
   UseGuards,
+  Delete,
 } from '@nestjs/common';
 import { PatientService } from './patient.service';
 import { ResponseHandler } from 'utility/success-response';
@@ -20,7 +21,7 @@ export class PatientController {
   constructor(
     private readonly patientService: PatientService,
     private readonly responseHandler: ResponseHandler,
-  ) {}
+  ) { }
 
   @Get()
   @UseGuards(VerifyAdminGuard)
@@ -73,4 +74,18 @@ export class PatientController {
       'patient profile updated',
     );
   }
+
+
+  @Delete()
+  public async deleteProfile(
+    @Req() req: Request,
+  ): Promise<SuccessHandler<any>> {
+    const { id, role } = req.user
+    console.log("Entered :", id, role)
+    const response = await this.patientService.deletePatient(id, role)
+    return this.responseHandler.successHandler(true, "Patient Deleted Successfully")
+  }
+
+
+
 }

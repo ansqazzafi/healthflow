@@ -17,12 +17,16 @@ import { JwtService } from '@nestjs/jwt';
   ],
   controllers: [PatientCareController],
   providers: [PatientCareService, ResponseHandler, JwtService],
-  exports:[PatientCareService]
+  exports: [PatientCareService]
 })
 export class PatientCareModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     consumer
       .apply(JwtMiddleware)
-      .forRoutes({ path: 'patient-care', method: RequestMethod.PATCH });
+      .forRoutes(
+        { path: 'patient-care', method: RequestMethod.PATCH },
+        { path: 'patient-care', method: RequestMethod.GET },
+        { path: 'patient-care/:id', method: RequestMethod.GET }
+      );
   }
 }

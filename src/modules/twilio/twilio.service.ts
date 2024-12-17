@@ -40,6 +40,8 @@ export class TwilioService {
       return response
 
     } catch (error) {
+      console.log(error, "error");
+      
       if (error instanceof CustomError) {
         throw error
       }

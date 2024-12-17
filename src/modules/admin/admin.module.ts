@@ -7,9 +7,11 @@ import { AdminController } from './admin.controller';
 import { JwtMiddleware } from 'middlewares/verify-jwt.middlware';
 import { JwtService } from '@nestjs/jwt';
 import { TwilioModule } from '../twilio/twilio.module';
+import { NodemailerModule } from 'src/nodemailer/nodemailer.module';
 @Module({
   imports: [
     TwilioModule,
+    NodemailerModule,
     MongooseModule.forFeature([{ name: User.name, schema: User }]),
   ],
   providers: [AdminService, ResponseHandler, JwtService],

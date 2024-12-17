@@ -4,9 +4,18 @@ import { User, UserDocument } from '../user/user.schema';
 import { Model } from 'mongoose';
 import { CustomError } from 'utility/custom-error';
 import { UpdatePatientDTO } from './DTO/updateDto';
+import { Appointment, AppointmentDocument } from '../appointment/appointment.schema';
+import { roles } from 'enums/role.enum';
+import { TwilioService } from '../twilio/twilio.service';
+import { NodemailerService } from 'src/nodemailer/nodemailer.service';
 @Injectable()
 export class PatientService {
-  constructor(@InjectModel(User.name) private userModel: Model<UserDocument>) {}
+  constructor(
+    @InjectModel(User.name) private userModel: Model<UserDocument>,
+    @InjectModel(Appointment.name) private appointmentModel: Model<AppointmentDocument>,
+    private readonly twilioService: TwilioService,
+    private readonly nodemailerService: NodemailerService
+  ) { }
 
   public async findPatients(
     page: number,
@@ -89,4 +98,51 @@ export class PatientService {
       throw new CustomError('There was an error updating the Profile', 500);
     }
   }
+
+  public async deletePatient(id: string, role: string): Promise<any> {
+    const session = await this.userModel.db.startSession();
+    if (role !== roles.patient) {
+      throw new CustomError("Only patient can deleted its account", 401)
+    }
+
+    try {
+      session.startTransaction();
+
+      const deletedPatient = await this.userModel.findByIdAndDelete(id).session(session);
+      if (!deletedPatient) {
+        throw new CustomError("Patient Not Found", 404);
+      }
+
+      const appointmentIDs = deletedPatient.appointmentRecords;
+
+      if (appointmentIDs && appointmentIDs.length > 0) {
+        await this.appointmentModel.deleteMany(
+          { _id: { $in: appointmentIDs } },
+          { session }
+        );
+      }
+      if (appointmentIDs && appointmentIDs.length > 0) {
+        await this.userModel.updateMany(
+          { appointmentRecords: { $in: appointmentIDs } },
+          { $pull: { appointmentRecords: { $in: appointmentIDs } } },
+          { session }
+        );
+      }
+      await this.nodemailerService.sendMail(deletedPatient.email, 'Account Deleted', `Your Account corresponding ${deletedPatient.email} are deleted Successfully from HealthFlow`, deletedPatient.name)
+      await session.commitTransaction();
+      return { message: "Patient and associated appointments deleted successfully" };
+
+    } catch (error) {
+      await session.abortTransaction();
+      if (error instanceof CustomError) {
+        throw error;
+      }
+
+      throw new CustomError("There was an error deleting the account", 500);
+    } finally {
+      session.endSession();
+    }
+  }
+
+
 }

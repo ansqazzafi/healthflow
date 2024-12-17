@@ -16,12 +16,15 @@ import { DoctorModule } from '../doctor/doctor.module';
 import { JwtService } from '@nestjs/jwt';
 import { MiddlewareConsumer } from '@nestjs/common';
 import { JwtMiddleware } from 'middlewares/verify-jwt.middlware';
+import { NodemailerService } from 'src/nodemailer/nodemailer.service';
+import { NodemailerModule } from 'src/nodemailer/nodemailer.module';
 @Module({
   imports: [
     TwilioModule,
     HospitalModule,
     DoctorModule,
-    UserModule
+    UserModule,
+    NodemailerModule
   ],
   controllers: [AuthController],
   providers: [ResponseHandler, JwtService, AuthService],

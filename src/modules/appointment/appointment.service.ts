@@ -15,6 +15,7 @@ import { identity } from 'rxjs';
 import { strict } from 'assert';
 import { UpdateDoctorDTO } from '../doctor/DTO/update-doctor.dto';
 import { UpdateAppointment } from './DTO/update-appointment-details';
+import { NodemailerService } from 'src/nodemailer/nodemailer.service';
 
 @Injectable()
 export class AppointmentService {
@@ -23,7 +24,107 @@ export class AppointmentService {
     private appointmentModel: Model<AppointmentDocument>,
     @InjectModel(User.name) private userModel: Model<any>,
     private readonly twilioService: TwilioService,
-  ) {}
+    private readonly nodemailerService: NodemailerService
+  ) { }
+
+  // public async updateAppointmentStatus(
+  //   userId: string,
+  //   role: roles,
+  //   appointmentId: string,
+  //   status: AppointmentStatus,
+  //   reason?: string,
+  // ): Promise<any> {
+  //   try {
+  //     console.log(userId, appointmentId, status, 'IDS');
+  //     let updatedAppointment;
+  //     if (role === 'doctor') {
+  //       updatedAppointment = await this.appointmentModel.findOneAndUpdate(
+  //         {
+  //           _id: new Types.ObjectId(appointmentId),
+  //           doctor: new Types.ObjectId(userId),
+  //         },
+  //         { $set: { status: status } },
+  //         { new: true },
+  //       );
+  //     } else if (role === 'patientCare') {
+  //       updatedAppointment = await this.appointmentModel.findOneAndUpdate(
+  //         {
+  //           _id: new Types.ObjectId(appointmentId),
+  //         },
+  //         { $set: { status: status } },
+  //         { new: true },
+  //       );
+  //     } else if (role === 'patient') {
+  //       if (status !== AppointmentStatus.CANCELLED) {
+  //         throw new CustomError(
+  //           'Patients can only cancel their own appointment',
+  //           403,
+  //         );
+  //       }
+
+  //       updatedAppointment = await this.appointmentModel.findOneAndUpdate(
+  //         {
+  //           _id: new Types.ObjectId(appointmentId),
+  //           patient: new Types.ObjectId(userId),
+  //         },
+  //         { $set: { status: status } },
+  //         { new: true },
+  //       );
+  //     } else {
+  //       throw new CustomError("Sorry you can't modify status", 401);
+  //     }
+
+  //     if (!updatedAppointment) {
+  //       throw new CustomError(
+  //         'Appointment not found or invalid status transition',
+  //         404,
+  //       );
+  //     }
+  //     if (status === AppointmentStatus.CANCELLED && reason) {
+  //       updatedAppointment.cancelledReason = reason;
+  //       await updatedAppointment.save();
+  //       console.log('Cancel reason updated:', reason);
+  //     }
+  //     console.log(updatedAppointment.status, 'Updated Appointment Status');
+  //     const doctor = await this.userModel.findById(updatedAppointment.doctor);
+  //     const patient = await this.userModel.findById(updatedAppointment.patient);
+  //     const hospital = await this.userModel.findById(
+  //       updatedAppointment.hospital,
+  //     );
+
+  //     if (!doctor || !patient || !hospital) {
+  //       throw new CustomError('Doctor, patient, or hospital not found', 404);
+  //     }
+
+  //     const doctorName = doctor.name;
+  //     const hospitalName = hospital.name;
+  //     const patientPhoneNumber = patient.phoneNumber;
+
+  //     const sendMessage = await this.nodemailerService.sendMail(
+  //       patient.email,
+  //       'Appointment Approved',
+  //       `Your appointment with Dr. ${doctorName} at ${hospitalName} has been ${status}.` +
+  //       (status === AppointmentStatus.CANCELLED && reason
+  //         ? ` Reason: ${reason}`
+  //         : ''),
+  //       patient.name
+  //     );
+
+  //     return {
+  //       success: true,
+  //       message: `Appointment ${status} successfully`,
+  //       appointment: updatedAppointment,
+  //     };
+  //   } catch (error) {
+  //     console.log(error, 'Error');
+  //     if (error instanceof CustomError) {
+  //       throw error;
+  //     }
+  //     throw new CustomError('There is an error updating the appointment', 500);
+  //   }
+  // }
+
+
 
   public async updateAppointmentStatus(
     userId: string,
@@ -35,6 +136,32 @@ export class AppointmentService {
     try {
       console.log(userId, appointmentId, status, 'IDS');
       let updatedAppointment;
+  
+      const currentAppointment = await this.appointmentModel.findById(
+        new Types.ObjectId(appointmentId),
+      );
+  
+      if (!currentAppointment) {
+        throw new CustomError('Appointment not found', 404);
+      }
+  
+      if (currentAppointment.status === AppointmentStatus.APPROVED) {
+        if (status === AppointmentStatus.APPROVED) {
+          throw new CustomError('Appointment is already approved, status cannot be updated to approved again', 400);
+        }
+
+        if (![AppointmentStatus.CANCELLED, AppointmentStatus.MISSED, AppointmentStatus.COMPLETED].includes(status)) {
+          throw new CustomError('You can only update an approved appointment to cancelled, completed or missed', 400);
+        }
+      }
+  
+      if (currentAppointment.status === AppointmentStatus.CANCELLED) {
+        throw new CustomError('Appointment is already cancelled, status cannot be changed', 400);
+      }
+      if (currentAppointment.status === AppointmentStatus.COMPLETED) {
+        throw new CustomError('Appointment Completed, status cannot be changed', 400);
+      }
+
       if (role === 'doctor') {
         updatedAppointment = await this.appointmentModel.findOneAndUpdate(
           {
@@ -54,12 +181,9 @@ export class AppointmentService {
         );
       } else if (role === 'patient') {
         if (status !== AppointmentStatus.CANCELLED) {
-          throw new CustomError(
-            'Patients can only cancel their own appointment',
-            403,
-          );
+          throw new CustomError('Patients can only cancel their own appointment', 403);
         }
-
+  
         updatedAppointment = await this.appointmentModel.findOneAndUpdate(
           {
             _id: new Types.ObjectId(appointmentId),
@@ -71,45 +195,40 @@ export class AppointmentService {
       } else {
         throw new CustomError("Sorry you can't modify status", 401);
       }
-
+  
+      // If appointment is not found or invalid status transition
       if (!updatedAppointment) {
-        throw new CustomError(
-          'Appointment not found or invalid status transition',
-          404,
-        );
+        throw new CustomError('Appointment not found or invalid status transition', 404);
       }
+  
+      // If the status is cancelled and reason is provided, update the reason
       if (status === AppointmentStatus.CANCELLED && reason) {
         updatedAppointment.cancelledReason = reason;
         await updatedAppointment.save();
         console.log('Cancel reason updated:', reason);
       }
+  
       console.log(updatedAppointment.status, 'Updated Appointment Status');
       const doctor = await this.userModel.findById(updatedAppointment.doctor);
       const patient = await this.userModel.findById(updatedAppointment.patient);
-      const hospital = await this.userModel.findById(
-        updatedAppointment.hospital,
-      );
-
+      const hospital = await this.userModel.findById(updatedAppointment.hospital);
+  
       if (!doctor || !patient || !hospital) {
         throw new CustomError('Doctor, patient, or hospital not found', 404);
       }
-
+  
       const doctorName = doctor.name;
       const hospitalName = hospital.name;
       const patientPhoneNumber = patient.phoneNumber;
-
-      const sendMessage = await this.twilioService.sendMessage(
-        patientPhoneNumber,
+  
+      const sendMessage = await this.nodemailerService.sendMail(
+        patient.email,
+        'Appointment Status Update',
         `Your appointment with Dr. ${doctorName} at ${hospitalName} has been ${status}.` +
-          (status === AppointmentStatus.CANCELLED && reason
-            ? ` Reason: ${reason}`
-            : ''),
+          (status === AppointmentStatus.CANCELLED && reason ? ` Reason: ${reason}` : ''),
+        patient.name,
       );
-
-      if (!sendMessage) {
-        throw new CustomError('Message not sent');
-      }
-
+  
       return {
         success: true,
         message: `Appointment ${status} successfully`,
@@ -186,7 +305,7 @@ export class AppointmentService {
             ...(role === roles.doctor && { doctor: objId }),
             ...(role === roles.admin || role === roles.patientCare ? {} : null),
             ...(date && {
-              createdAt: {
+              appointmentDate: {
                 $gte: new Date(date.setHours(0, 0, 0, 0)),
                 $lte: new Date(date.setHours(23, 59, 59, 999)),
               },
@@ -314,6 +433,16 @@ export class AppointmentService {
           { $push: { appointmentRecords: appointment._id } },
           { session },
         ),
+        this.userModel.updateOne(
+          { role: roles.admin },
+          { $push: { appointmentRecords: appointment._id } },
+          { session },
+        ),
+        this.userModel.updateOne(
+          { role: roles.patientCare },
+          { $push: { appointmentRecords: appointment._id } },
+          { session },
+        ),
       ]);
 
       console.log('Entities updated:', updateResults);
@@ -324,8 +453,6 @@ export class AppointmentService {
           401,
         );
       }
-
-      // Commit the transaction and return the created appointment
       return appointment;
     } catch (error) {
       if (error instanceof CustomError) {

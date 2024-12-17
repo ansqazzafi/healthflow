@@ -8,6 +8,7 @@ import {
   Query,
   Param,
   Patch,
+  Delete,
 } from '@nestjs/common';
 import { RegisterDto } from 'DTO/register.dto';
 import { SuccessHandler } from 'interfaces/success-handler.interface';
@@ -17,15 +18,15 @@ import { DoctorService } from './doctor.service';
 import { ResponseHandler } from 'utility/success-response';
 import { Request } from 'express';
 import { UpdateDoctorDTO } from './DTO/update-doctor.dto';
+import { roles } from 'enums/role.enum';
 @Controller('doctor')
 export class DoctorController {
   constructor(
     private readonly doctorService: DoctorService,
     private readonly responseHandler: ResponseHandler,
-  ) {}
+  ) { }
 
   @Post()
-  @UsePipes(HashPasswordPipe)
   public async registerDoctor(
     @Body() RegisterDto: RegisterDto,
     @Req() req: Request,
@@ -94,8 +95,8 @@ export class DoctorController {
     @Req() req: Request,
   ): Promise<SuccessHandler<any>> {
     const { id, role } = req.user;
-    console.log(id , role , "hit the point");
-    
+    console.log(id, role, "hit the point");
+
     if (role !== 'doctor') {
       throw new CustomError('Cannot update the doctor');
     }
@@ -108,5 +109,19 @@ export class DoctorController {
       'Doctor profile updated',
     );
 
-}
+  }
+
+  @Delete(':doctorId')
+  public async deleteDoctor(
+    @Req() req: Request,
+    @Param('doctorId') doctorId: string
+  ): Promise<SuccessHandler<any>> {
+    console.log("True")
+    const { id, role } = req.user
+    if (role !== roles.hospital) {
+      throw new CustomError("Only Hospital who hired this Doctor")
+    }
+    const response = await this.doctorService.deleteDoctor(id, doctorId)
+    return this.responseHandler.successHandler(true, "Doctor deleted from your Hospital")
+  }
 }

@@ -11,10 +11,20 @@ import { ResponseHandler } from 'utility/success-response';
 import { PatientController } from './patient.controller';
 import { JwtMiddleware } from 'middlewares/verify-jwt.middlware';
 import { JwtService } from '@nestjs/jwt';
+import { TwilioModule } from '../twilio/twilio.module';
+import { AppointmentModule } from '../appointment/appointment.module';
+import { TwilioService } from '../twilio/twilio.service';
+import { AppointmentService } from '../appointment/appointment.service';
+import { Appointment, AppointmentSchema } from '../appointment/appointment.schema';
+import { NodemailerModule } from 'src/nodemailer/nodemailer.module';
 
 @Module({
   imports: [
+    TwilioModule,
+    AppointmentModule,
+    NodemailerModule,
     MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
+    MongooseModule.forFeature([{ name: Appointment.name, schema: AppointmentSchema }]),
   ],
   providers: [PatientService, ResponseHandler, JwtService],
   controllers: [PatientController],
@@ -28,7 +38,7 @@ export class PatientModule implements NestModule {
         { path: 'patient', method: RequestMethod.PATCH },
         { path: 'patient/:id', method: RequestMethod.GET },
         { path: 'patient', method: RequestMethod.GET },
-
+        { path: 'patient', method: RequestMethod.DELETE },
       );
   }
 }

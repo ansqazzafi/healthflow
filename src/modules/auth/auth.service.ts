@@ -14,11 +14,13 @@ import { roles } from 'enums/role.enum';
 import { response } from 'express';
 import * as bcrypt from 'bcrypt'
 import { log } from 'node:console';
+import { NodemailerService } from 'src/nodemailer/nodemailer.service';
 @Injectable()
 export class AuthService {
   constructor(
     private readonly twilioService: TwilioService,
     private readonly jwtService: JwtService,
+    private readonly nodemailerService:NodemailerService,
     @InjectModel(User.name) private userModel: Model<UserDocument>,
   ) { }
 
@@ -66,9 +68,8 @@ export class AuthService {
         ...roleData,
       });
       console.log("new User", newUser);
-
-      // Save the new user to the database
       await newUser.save();
+      await this.nodemailerService.sendMail(newUser.email, "Confirmation", "Thanks for Registering in HealthFlow. Please wait for account verification.", newUser.name)
       console.log("saved");
       return true;
 

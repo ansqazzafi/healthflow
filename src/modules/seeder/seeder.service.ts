@@ -9,6 +9,7 @@ import {
   Appointment,
   AppointmentDocument,
 } from '../appointment/appointment.schema';
+import { NodemailerService } from 'src/nodemailer/nodemailer.service';
 
 @Injectable()
 export class SeederService {
@@ -18,15 +19,16 @@ export class SeederService {
     @InjectModel(User.name) private userModel: Model<UserDocument>,
     @InjectModel(Appointment.name)
     private appointmentModel: Model<AppointmentDocument>,
+    private readonly nodemailerService:NodemailerService
   ) {}
 
   async seed() {
-    const admin = await this.userModel.findOne({ email: 'admin@gmail.com' });
+    const admin = await this.userModel.findOne({ email: '0357bhabscsias20@gmail.com' });
     if (!admin) {
       const hashedPassword = await bcrypt.hash('00000000', 10);
       await this.userModel.create({
         name: 'Ans Qazzafi',
-        email: 'admin@gmail.com',
+        email: '0357bhabscsias20@gmail.com',
         password: hashedPassword,
         phoneNumber: '1234567890',
         isActive: true,
@@ -38,6 +40,7 @@ export class SeederService {
     } else {
       this.logger.log('Admin user already exists');
     }
+
 
       const patientCareMember = await this.userModel.findOne({
         email: 'patientcare@gmail.com',

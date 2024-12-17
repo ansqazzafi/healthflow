@@ -7,12 +7,14 @@ import { JwtService } from '@nestjs/jwt';
 import { roles } from 'enums/role.enum';
 import { UpdateAdminDTO } from './DTO/updatedto copy';
 import { TwilioService } from '../twilio/twilio.service';
+import { NodemailerService } from 'src/nodemailer/nodemailer.service';
 @Injectable()
 export class AdminService {
   constructor(
     @InjectModel(User.name) private userModel: Model<UserDocument>,
     private readonly jwtService: JwtService,
-    private readonly twilioService: TwilioService
+    private readonly twilioService: TwilioService,
+    private readonly nodemailerService: NodemailerService,
   ) { }
 
   public async verifyAccount(Id: string): Promise<any> {
@@ -26,10 +28,10 @@ export class AdminService {
     }
     user.isActive = true;
     const updateUser = await user.save();
+    await this.nodemailerService.sendMail(user.email, "Account Activated", `Congragulation Your Account corresponding ${user.email} at HealthFlow are Activated Successfully, Now you can login your account`, user.name)
     if(updateUser.isActive !== true){
       throw new CustomError("Unable to verify account")
     }
-    await this.twilioService.sendMessage(user.phoneNumber, `Your Account corresponding ${user.email} at HealthFlow are Activated Successfully, Now you can login your account`)
     return { message: `User account verified successfully!` };
   }
 
