@@ -7,7 +7,7 @@ import { JwtService } from '@nestjs/jwt';
 import { roles } from 'enums/role.enum';
 import { UpdateAdminDTO } from './DTO/updatedto copy';
 import { TwilioService } from '../twilio/twilio.service';
-import { NodemailerService } from 'src/nodemailer/nodemailer.service';
+import { NodemailerService } from 'src/modules/nodemailer/nodemailer.service';
 @Injectable()
 export class AdminService {
   constructor(

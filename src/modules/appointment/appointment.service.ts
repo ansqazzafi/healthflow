@@ -15,7 +15,7 @@ import { identity } from 'rxjs';
 import { strict } from 'assert';
 import { UpdateDoctorDTO } from '../doctor/DTO/update-doctor.dto';
 import { UpdateAppointment } from './DTO/update-appointment-details';
-import { NodemailerService } from 'src/nodemailer/nodemailer.service';
+import { NodemailerService } from 'src/modules/nodemailer/nodemailer.service';
 
 @Injectable()
 export class AppointmentService {

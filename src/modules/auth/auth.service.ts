@@ -14,7 +14,7 @@ import { roles } from 'enums/role.enum';
 import { response } from 'express';
 import * as bcrypt from 'bcrypt'
 import { log } from 'node:console';
-import { NodemailerService } from 'src/nodemailer/nodemailer.service';
+import { NodemailerService } from 'src/modules/nodemailer/nodemailer.service';
 @Injectable()
 export class AuthService {
   constructor(

@@ -9,7 +9,7 @@ import {
   Appointment,
   AppointmentDocument,
 } from '../appointment/appointment.schema';
-import { NodemailerService } from 'src/nodemailer/nodemailer.service';
+import { NodemailerService } from 'src/modules/nodemailer/nodemailer.service';
 
 @Injectable()
 export class SeederService {

@@ -16,7 +16,7 @@ import { AppointmentModule } from '../appointment/appointment.module';
 import { TwilioService } from '../twilio/twilio.service';
 import { AppointmentService } from '../appointment/appointment.service';
 import { Appointment, AppointmentSchema } from '../appointment/appointment.schema';
-import { NodemailerModule } from 'src/nodemailer/nodemailer.module';
+import { NodemailerModule } from 'src/modules/nodemailer/nodemailer.module';
 
 @Module({
   imports: [

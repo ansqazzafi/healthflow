@@ -9,7 +9,7 @@ import { UserModule } from '../user/user.module';
 import { JwtService } from '@nestjs/jwt';
 import { AppointmentModule } from '../appointment/appointment.module';
 import { Appointment, AppointmentSchema } from '../appointment/appointment.schema';
-import { NodemailerModule } from 'src/nodemailer/nodemailer.module';
+import { NodemailerModule } from 'src/modules/nodemailer/nodemailer.module';
 MongooseModule;
 @Module({
   imports: [

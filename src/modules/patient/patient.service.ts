@@ -7,7 +7,7 @@ import { UpdatePatientDTO } from './DTO/updateDto';
 import { Appointment, AppointmentDocument } from '../appointment/appointment.schema';
 import { roles } from 'enums/role.enum';
 import { TwilioService } from '../twilio/twilio.service';
-import { NodemailerService } from 'src/nodemailer/nodemailer.service';
+import { NodemailerService } from 'src/modules/nodemailer/nodemailer.service';
 @Injectable()
 export class PatientService {
   constructor(

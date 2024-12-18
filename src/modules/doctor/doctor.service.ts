@@ -15,8 +15,8 @@ import { deletedDoctorMessage } from 'utility/deleted-doctor-message'
 import { RegisterDto } from 'DTO/register.dto';
 import { Types } from 'twilio/lib/rest/content/v1/content';
 import { Appointment, AppointmentDocument } from '../appointment/appointment.schema';
-import { NodemailerModule } from 'src/nodemailer/nodemailer.module';
-import { NodemailerService } from 'src/nodemailer/nodemailer.service';
+import { NodemailerModule } from 'src/modules/nodemailer/nodemailer.module';
+import { NodemailerService } from 'src/modules/nodemailer/nodemailer.service';
 
 @Injectable()
 export class DoctorService {

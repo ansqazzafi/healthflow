@@ -8,7 +8,7 @@ import { JwtMiddleware } from 'middlewares/verify-jwt.middlware';
 import { JwtService } from '@nestjs/jwt';
 import { UserModule } from '../user/user.module';
 import { TwilioModule } from '../twilio/twilio.module';
-import { NodemailerModule } from 'src/nodemailer/nodemailer.module';
+import { NodemailerModule } from 'src/modules/nodemailer/nodemailer.module';
 MongooseModule;
 @Module({
   imports: [

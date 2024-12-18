@@ -19,8 +19,8 @@ import { AppointmentModule } from './modules/appointment/appointment.module';
 import { DepartmentController } from './modules/department/department.controller';
 import { DepartmentService } from './modules/department/department.service';
 import { DepartmentModule } from './modules/department/department.module';
-import { NodemailerService } from './nodemailer/nodemailer.service';
-import { NodemailerModule } from './nodemailer/nodemailer.module';
+import { NodemailerService } from './modules/nodemailer/nodemailer.service';
+import { NodemailerModule } from './modules/nodemailer/nodemailer.module';
 
 @Module({
   imports: [
