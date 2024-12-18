@@ -16,8 +16,8 @@ import { DoctorModule } from '../doctor/doctor.module';
 import { JwtService } from '@nestjs/jwt';
 import { MiddlewareConsumer } from '@nestjs/common';
 import { JwtMiddleware } from 'middlewares/verify-jwt.middlware';
-import { NodemailerService } from 'src/nodemailer/nodemailer.service';
-import { NodemailerModule } from 'src/nodemailer/nodemailer.module';
+import { NodemailerService } from 'src/modules/nodemailer/nodemailer.service';
+import { NodemailerModule } from 'src/modules/nodemailer/nodemailer.module';
 @Module({
   imports: [
     TwilioModule,

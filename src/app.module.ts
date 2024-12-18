@@ -21,6 +21,9 @@ import { DepartmentService } from './modules/department/department.service';
 import { DepartmentModule } from './modules/department/department.module';
 import { NodemailerService } from './modules/nodemailer/nodemailer.service';
 import { NodemailerModule } from './modules/nodemailer/nodemailer.module';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { join } from 'path';
+import { ChatbotModule } from './modules/chatbot/chatbot.module';
 
 @Module({
   imports: [
@@ -31,6 +34,10 @@ import { NodemailerModule } from './modules/nodemailer/nodemailer.module';
     MongooseModule.forRoot(process.env.MONGODB_URI),
     MongooseModule.forFeature([{ name: Appointment.name, schema: AppointmentSchema }]),
     MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '..', 'public'),
+    }),
+    ChatbotModule,
     AuthModule,
     TwilioModule,
     DoctorModule,
