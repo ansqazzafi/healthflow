@@ -9,6 +9,7 @@ async function bootstrap() {
   
   app.use(cookieParser());
   app.useGlobalPipes(new ValidationPipe());
+  app.enableCors()
   await app.listen(process.env.PORT ?? 3000);
   const seederService = app.get(SeederService);
   await seederService.seed();

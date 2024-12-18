@@ -8,23 +8,26 @@
     body {
       font-family: Arial, sans-serif;
       padding: 20px;
-      background-color: #f7f7f7;
+      background-color: #000000; /* Black background for the whole page */
+      color: #ffffff; /* White text color */
     }
     h1, h2 {
       text-align: center;
+      color: #ffffff; /* White color for headings */
     }
     #chat-room {
       display: none;
       margin-top: 20px;
     }
     #messages {
-      height: 300px;
       overflow-y: auto;
+      height: 300px;
       border: 1px solid #ccc;
       padding: 10px;
-      background-color: white;
+      background-color: #000000;
       margin-bottom: 10px;
       border-radius: 8px;
+      color: #ffffff; 
     }
     .message {
       margin: 10px 0;
@@ -32,20 +35,27 @@
       border-radius: 8px;
     }
     .question {
-      background-color: #f0f0f0;
-      border: 1px solid #ccc;
-      color: #333;
+      background-color: #000000; 
+      border: 1px solid #ccc; 
+      color: #ffffff; 
       margin-bottom: 8px;
+      max-width: 50%;
     }
     .answer {
-      background-color: #e3f7e7;
-      border: 1px solid #b6f5b6;
-      color: #3b823b;
+      background-color: #000000; 
+      border: 1px solid #ccc; 
+      color: #ffffff;
+      max-width: 50%;
     }
     .user-input {
-      background-color: #d0e6ff;
-      color: #007bff;
+      background-color: #ADD8E6; 
+      color: #000000; 
       text-align: right;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      position: relative;
+      left: 52%;
+      max-width: 47%;
     }
     input[type="text"] {
       padding: 10px;
@@ -53,6 +63,8 @@
       border-radius: 8px;
       border: 1px solid #ccc;
       margin-top: 10px;
+      background-color: #333333; 
+      color: #ffffff;
     }
     button {
       padding: 10px;
@@ -83,82 +95,70 @@
 
   <script src="https://cdn.socket.io/4.6.0/socket.io.min.js"></script>
   <script>
-    const socket = io('http://localhost:3000');  // Update with your actual server URL
+    const socket = io('http://localhost:3000');  
     const startChatBtn = document.getElementById('start-chat-btn');
     const chatRoom = document.getElementById('chat-room');
     const messagesDiv = document.getElementById('messages');
     const sendBtn = document.getElementById('send-btn');
     const questionIdInput = document.getElementById('question-id');
-
     let randomQuestions = [];
-
-    // Function to append messages to the chat room
     function appendMessage(content, side, type) {
       const message = document.createElement('div');
       message.classList.add('message', type);
 
-      if (side === 'left') {
+      if (side === 'left' && type === "question") {
         message.classList.add('question');
         message.innerHTML = `<strong>Question:</strong> ${content}`;
-      } else if (side === 'right') {
+      } else if (side === 'right' && type === "user-input") {
         message.classList.add('user-input');
-        message.innerHTML = `<strong>Your Input:</strong> ${content}`;
-      } else {
+        message.innerHTML = `<strong>${content}</strong> `;
+      } else if (side === 'left' && type === "answer") {
         message.classList.add('answer');
         message.innerHTML = `<strong>Answer:</strong> ${content}`;
       }
 
       messagesDiv.appendChild(message);
-      messagesDiv.scrollTop = messagesDiv.scrollHeight;  // Scroll to the bottom
+      messagesDiv.scrollTop = messagesDiv.scrollHeight;  
     }
 
-    // Event listener for starting the chat
     startChatBtn.addEventListener('click', () => {
       socket.emit('startChat');
-      startChatBtn.disabled = true;  // Disable the button once clicked
+      startChatBtn.disabled = true;  
     });
 
-    // Event listener for sending the question ID
     sendBtn.addEventListener('click', () => {
       const tempId = parseInt(questionIdInput.value.trim(), 10);
 
       if (tempId >= 1 && tempId <= 5) {
-        // Get the question corresponding to the tempId
+
         const selectedQuestion = randomQuestions[tempId - 1].question;
-        appendMessage(tempId, "right", "user-input");  // Show the ID entered by the user
+        appendMessage(tempId, "right", "user-input"); 
         socket.emit('selectQuestion', { question: selectedQuestion });
       } else if (tempId === 0) {
-        // Request new random questions
         socket.emit('startChat');
         appendMessage("Fetching new questions...", "left", "answer");
       } else {
-        appendMessage("Invalid ID! Please enter a number between 1 and 5.", "left", "answer");
+        appendMessage("Invalid Selection! Please enter a number between 1 and 5.", "left", "answer");
       }
 
-      questionIdInput.value = '';  // Clear the input field
+      questionIdInput.value = '';  
     });
-
-    // Listen for the 'newQuestions' event from the server
     socket.on('newQuestions', (questions) => {
-      chatRoom.style.display = 'block';  // Show the chat room
-      randomQuestions = questions;  // Store the random questions
+      chatRoom.style.display = 'block';  
+      randomQuestions = questions;
 
       questions.forEach((q, index) => {
-        appendMessage(`${index + 1}: ${q.question}`, "left", "question");  // Show questions with tempId
+        appendMessage(`${index + 1}: ${q.question}`, "left", "question"); 
       });
     });
 
-    // Listen for the 'answer' event from the server
     socket.on('answer', (answer) => {
-      appendMessage(answer, "left", "answer");  // Show the answer
+      appendMessage(answer, "left", "answer");  
     });
 
-    // Show message when connected to the WebSocket server
     socket.on('connect', () => {
       console.log('Connected to WebSocket server');
     });
-
-    // Show message when disconnected from the WebSocket server
     socket.on('disconnect', () => {
       console.log('Disconnected from WebSocket server');
     });
