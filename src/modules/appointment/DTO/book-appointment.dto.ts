@@ -1,34 +1,18 @@
 import { Transform } from 'class-transformer';
-import { IsDate, IsEnum, IsMongoId, IsOptional, IsString } from 'class-validator';
+import { IsDate, IsEnum, IsMongoId, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 import { AppointmentStatus } from 'enums/appointment.enum';
 import { AppointmentType } from 'enums/appointment.enum';
 
 export class BookAppointmentDto {
-  @Transform(({ value }) => new Date(value)) // Automatically transform string to Date
+  @Transform(({ value }) => new Date(value)) 
   @IsDate()
   appointmentDate: Date; 
 
-  @IsOptional()
-  @IsEnum(AppointmentStatus)
-  status?: AppointmentStatus = AppointmentStatus.PENDING; 
-
-  @IsOptional()
+  @IsNotEmpty()
   @IsString()
-  cancelledReason?: string; 
+  description: string;  
 
-  @IsOptional()
-  @IsString()
-  feedback?: string; 
-
-  @IsOptional()
-  @IsString()
-  prescription?: string; 
-
-  @IsOptional()
-  @IsString()
-  description?: string;  
-
-  @IsOptional()
+  @IsNotEmpty()
   @IsEnum(AppointmentType)
-  Type?: AppointmentType; 
+  Type: AppointmentType; 
 }

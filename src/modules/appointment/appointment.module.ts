@@ -31,6 +31,7 @@ export class AppointmentModule {
       .forRoutes(
         { path: 'appointment/:hospitalId/:doctorId', method: RequestMethod.POST },
         { path: 'appointment/:appointmentId/:status', method: RequestMethod.PATCH },
+        { path: 'appointment/:appointmentId', method: RequestMethod.PATCH },
         { path: 'appointment', method: RequestMethod.GET },
         { path: 'appointment/:appointmentId', method: RequestMethod.GET },
       );
