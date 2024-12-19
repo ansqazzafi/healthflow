@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,17 +9,24 @@
     body {
       font-family: Arial, sans-serif;
       padding: 20px;
-      background-color: #000000; /* Black background for the whole page */
-      color: #ffffff; /* White text color */
+      background-color: #000000;
+      /* Black background for the whole page */
+      color: #ffffff;
+      /* White text color */
     }
-    h1, h2 {
+
+    h1,
+    h2 {
       text-align: center;
-      color: #ffffff; /* White color for headings */
+      color: #ffffff;
+      /* White color for headings */
     }
+
     #chat-room {
       display: none;
       margin-top: 20px;
     }
+
     #messages {
       overflow-y: auto;
       height: 300px;
@@ -27,29 +35,33 @@
       background-color: #000000;
       margin-bottom: 10px;
       border-radius: 8px;
-      color: #ffffff; 
+      color: #ffffff;
     }
+
     .message {
       margin: 10px 0;
       padding: 10px;
       border-radius: 8px;
     }
+
     .question {
-      background-color: #000000; 
-      border: 1px solid #ccc; 
-      color: #ffffff; 
+      background-color: #000000;
+      border: 1px solid #ccc;
+      color: #ffffff;
       margin-bottom: 8px;
       max-width: 50%;
     }
+
     .answer {
-      background-color: #000000; 
-      border: 1px solid #ccc; 
+      background-color: #000000;
+      border: 1px solid #ccc;
       color: #ffffff;
       max-width: 50%;
     }
+
     .user-input {
-      background-color: #ADD8E6; 
-      color: #000000; 
+      background-color: #ADD8E6;
+      color: #000000;
       text-align: right;
       border-radius: 8px;
       border: 1px solid #ccc;
@@ -57,15 +69,17 @@
       left: 52%;
       max-width: 47%;
     }
+
     input[type="text"] {
       padding: 10px;
       width: 80%;
       border-radius: 8px;
       border: 1px solid #ccc;
       margin-top: 10px;
-      background-color: #333333; 
+      background-color: #333333;
       color: #ffffff;
     }
+
     button {
       padding: 10px;
       width: 15%;
@@ -76,14 +90,16 @@
       font-size: 14px;
       cursor: pointer;
     }
+
     button:disabled {
       background-color: #ccc;
     }
   </style>
 </head>
+
 <body>
 
-  <h1>Welcome to the Chatbot</h1>
+  <h1 id="h1"></h1>
   <button id="start-chat-btn">Start Chat</button>
 
   <div id="chat-room">
@@ -95,7 +111,18 @@
 
   <script src="https://cdn.socket.io/4.6.0/socket.io.min.js"></script>
   <script>
-    const socket = io('http://localhost:3000/chat');  
+    const accessToken = localStorage.getItem('accessToken')
+    console.log("AccessToken", accessToken)
+    const socket = io('http://localhost:3000/chat', {
+      auth: {
+        token: accessToken
+      }
+    });
+    socket.on('userAuthenticated', (data) => {
+      console.log("User Authenticated:", data);
+      document.querySelector('h1').textContent = `Welcome to the Chatbot, ${data.name}`;
+    });
+    console.log(socket, 'Socket')
     const startChatBtn = document.getElementById('start-chat-btn');
     const chatRoom = document.getElementById('chat-room');
     const messagesDiv = document.getElementById('messages');
@@ -118,12 +145,14 @@
       }
 
       messagesDiv.appendChild(message);
-      messagesDiv.scrollTop = messagesDiv.scrollHeight;  
+      messagesDiv.scrollTop = messagesDiv.scrollHeight;
     }
 
     startChatBtn.addEventListener('click', () => {
       socket.emit('startChat');
-      startChatBtn.disabled = true;  
+      console.log("Clicked");
+
+      startChatBtn.disabled = true;
     });
 
     sendBtn.addEventListener('click', () => {
@@ -132,7 +161,7 @@
       if (tempId >= 1 && tempId <= 5) {
 
         const selectedQuestion = randomQuestions[tempId - 1].question;
-        appendMessage(tempId, "right", "user-input"); 
+        appendMessage(tempId, "right", "user-input");
         socket.emit('selectQuestion', { question: selectedQuestion });
       } else if (tempId === 0) {
         socket.emit('startChat');
@@ -141,27 +170,32 @@
         appendMessage("Invalid Selection! Please enter a number between 1 and 5.", "left", "answer");
       }
 
-      questionIdInput.value = '';  
+      questionIdInput.value = '';
     });
     socket.on('newQuestions', (questions) => {
-      chatRoom.style.display = 'block';  
+      chatRoom.style.display = 'block';
       randomQuestions = questions;
 
       questions.forEach((q, index) => {
-        appendMessage(`${index + 1}: ${q.question}`, "left", "question"); 
+        appendMessage(`${index + 1}: ${q.question}`, "left", "question");
       });
     });
 
+
     socket.on('answer', (answer) => {
-      appendMessage(answer, "left", "answer");  
+      appendMessage(answer, "left", "answer");
     });
 
     socket.on('connect', () => {
       console.log('Connected to WebSocket server');
+      console.log("Sockets :", socket);
+
+      
     });
     socket.on('disconnect', () => {
       console.log('Disconnected from WebSocket server');
     });
   </script>
 </body>
+
 </html>

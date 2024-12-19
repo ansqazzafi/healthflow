@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+</head>
+<body>
+    <div style="max-width: 300px; margin: 50px auto; padding: 20px; border: 1px solid #ccc; border-radius: 8px; background-color: #f9f9f9;">
+        <h2>Login</h2>
+        <button onclick="login()">Login</button>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script>
+        // Function to send login request
+        function login() {
+            // Hardcoded login data
+            const loginData = {
+                role: "patient",
+                email: "ansqazzafi10@gmail.com",
+                password: "111111111"
+            };
+
+            // Axios POST request for login
+            axios.post('http://localhost:3000/auth/login', loginData)
+                .then(response => {
+                    // Check if the response contains access and refresh tokens
+                    const { accessToken, refreshToken, patient } = response.data.data;
+                    
+                    // Save the tokens in localStorage
+                    localStorage.setItem('accessToken', accessToken); // Save access token
+                    localStorage.setItem('refreshToken', refreshToken); // Save refresh token
+
+                    // Optionally, save patient information in localStorage as well (for use in other parts of the app)
+                    localStorage.setItem('patient', JSON.stringify(patient));
+                    window.location.href = "file:///C:/Users/Brackets/Desktop/healthflow/src/index.html"
+
+                    alert('Login successful!');
+                    console.log('Access Token:', accessToken);
+                    console.log('Refresh Token:', refreshToken);
+                    console.log('Patient Info:', patient);
+                })
+                .catch(error => {
+                    // Handle error (invalid credentials or other issues)
+                    alert('Login failed. Please check your credentials.');
+                    console.error(error);
+                });
+        }
+    </script>
+</body>
+</html>

@@ -10,10 +10,8 @@ import {
 import { Server, Socket } from 'socket.io';
 import { ChatbotService } from './chatbot.service';
 import { JwtService } from '@nestjs/jwt';
-import { UseGuards } from '@nestjs/common';
-import cookie from 'cookie'
-import { Request } from 'express';
-@WebSocketGateway({   namespace: 'chat',cors: { origin: '*' } })
+import { CustomError } from 'utility/custom-error';
+@WebSocketGateway({ namespace: 'chat', cors: { origin: '*' } })
 export class ChatbotGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
   server: Server;
@@ -21,48 +19,29 @@ export class ChatbotGateway implements OnGatewayConnection, OnGatewayDisconnect 
   constructor(
     private readonly chatbotService: ChatbotService,
     private readonly jwtService: JwtService,
-
   ) { }
-
   async handleConnection(socket: Socket) {
-  
-    
-    // const cookies = socket.handshake.headers.cookie;
-    // console.log(cookies, "Cookies")
-
-    // if (cookies) {
-    //   // Parse the cookies to extract the access token
-    //   const parsedCookies = cookie.parse(cookies); // Use cookie.parse() to parse the cookies
-    //   const accessToken = parsedCookies['access_token']; // Adjust the cookie name if needed
-
-    //   if (!accessToken) {
-    //     socket.emit('error', 'Authentication access token not found');
-    //     socket.disconnect();
-    //     return;
-    //   }
-
-    //   try {
-    //     // Verify the access token
-    //     const decodedToken = await this.jwtService.verifyAsync(accessToken, {
-    //       secret: process.env.ACCESS_KEY, // Ensure the correct secret key is used here
-    //     });
-
-    //     // Attach the user data directly from the decoded token (no need to query the DB)
-    //     socket.data.user = decodedToken; // Assuming the user data (userId, username, etc.) is in the token
-    //     console.log('User authenticated:', socket.data.user);
-    //   } catch (error) {
-    //     socket.emit('error', 'Invalid or expired access token');
-    //     socket.disconnect();
-    //   }
-    // } else {
-    //   socket.emit('error', 'No cookies found in handshake');
-    //   socket.disconnect();
-    // }
-
     console.log("Connected");
-    
-  }
+    const token = socket.handshake.auth.token;
+    console.log(token, "Token")
+    if (!token) {
+      throw new CustomError('Authorization token is required');
+    }
+    try {
+      const decodedToken = await this.jwtService.verifyAsync(token, {
+        secret: process.env.ACCESS_KEY,
+      });
+      console.log("decodedToken", decodedToken)
+      socket.data.user = decodedToken;
+      socket.data.isAuthenticated = true;
+      
+      socket.emit('userAuthenticated', { name: decodedToken.credentials.name });
+      console.log(`User ${decodedToken.credentials.name} authenticated successfully`);
+    } catch (error) {
+      throw new CustomError('Invalid or expired token', 401);
+    }
 
+  }
 
 
   async handleDisconnect(client: Socket) {
@@ -70,12 +49,11 @@ export class ChatbotGateway implements OnGatewayConnection, OnGatewayDisconnect 
   }
 
 
+
   @SubscribeMessage('startChat')
   async handleStartChat(client: Socket): Promise<WsResponse<any>> {
-console.log("called");
-
+    console.log("called");
     const questions = this.chatbotService.getRandomQuestions(5);
-
     return { event: 'newQuestions', data: questions };
   }
 
@@ -85,7 +63,6 @@ console.log("called");
     client: Socket,
     @MessageBody() data: { question: string }
   ): Promise<WsResponse<any>> {
-
     const answer = this.chatbotService.getAnswerByQuestion(data.question);
     return { event: 'answer', data: answer };
   }

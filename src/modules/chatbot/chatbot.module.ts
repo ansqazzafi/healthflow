@@ -10,7 +10,7 @@ import { UserModule } from '../user/user.module';
     UserModule
 
   ],
-  providers: [ChatbotGateway, ChatbotService, JwtService], // Register the service and gateway here
+  providers: [ChatbotGateway, ChatbotService, JwtService],
   exports:[ChatbotService]
 })
 export class ChatbotModule {}

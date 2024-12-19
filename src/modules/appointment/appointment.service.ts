@@ -136,15 +136,15 @@ export class AppointmentService {
     try {
       console.log(userId, appointmentId, status, 'IDS');
       let updatedAppointment;
-  
+
       const currentAppointment = await this.appointmentModel.findById(
         new Types.ObjectId(appointmentId),
       );
-  
+
       if (!currentAppointment) {
         throw new CustomError('Appointment not found', 404);
       }
-  
+
       if (currentAppointment.status === AppointmentStatus.APPROVED) {
         if (status === AppointmentStatus.APPROVED) {
           throw new CustomError('Appointment is already approved, status cannot be updated to approved again', 400);
@@ -154,7 +154,7 @@ export class AppointmentService {
           throw new CustomError('You can only update an approved appointment to cancelled, completed or missed', 400);
         }
       }
-  
+
       if (currentAppointment.status === AppointmentStatus.CANCELLED) {
         throw new CustomError('Appointment is already cancelled, status cannot be changed', 400);
       }
@@ -183,7 +183,7 @@ export class AppointmentService {
         if (status !== AppointmentStatus.CANCELLED) {
           throw new CustomError('Patients can only cancel their own appointment', 403);
         }
-  
+
         updatedAppointment = await this.appointmentModel.findOneAndUpdate(
           {
             _id: new Types.ObjectId(appointmentId),
@@ -195,40 +195,40 @@ export class AppointmentService {
       } else {
         throw new CustomError("Sorry you can't modify status", 401);
       }
-  
+
       // If appointment is not found or invalid status transition
       if (!updatedAppointment) {
         throw new CustomError('Appointment not found or invalid status transition', 404);
       }
-  
+
       // If the status is cancelled and reason is provided, update the reason
       if (status === AppointmentStatus.CANCELLED && reason) {
         updatedAppointment.cancelledReason = reason;
         await updatedAppointment.save();
         console.log('Cancel reason updated:', reason);
       }
-  
+
       console.log(updatedAppointment.status, 'Updated Appointment Status');
       const doctor = await this.userModel.findById(updatedAppointment.doctor);
       const patient = await this.userModel.findById(updatedAppointment.patient);
       const hospital = await this.userModel.findById(updatedAppointment.hospital);
-  
+
       if (!doctor || !patient || !hospital) {
         throw new CustomError('Doctor, patient, or hospital not found', 404);
       }
-  
+
       const doctorName = doctor.name;
       const hospitalName = hospital.name;
       const patientPhoneNumber = patient.phoneNumber;
-  
+
       const sendMessage = await this.nodemailerService.sendMail(
         patient.email,
         'Appointment Status Update',
         `Your appointment with Dr. ${doctorName} at ${hospitalName} has been ${status}.` +
-          (status === AppointmentStatus.CANCELLED && reason ? ` Reason: ${reason}` : ''),
+        (status === AppointmentStatus.CANCELLED && reason ? ` Reason: ${reason}` : ''),
         patient.name,
       );
-  
+
       return {
         success: true,
         message: `Appointment ${status} successfully`,
@@ -395,7 +395,16 @@ export class AppointmentService {
       console.log(
         `Booking appointment for patient: ${patientId}, doctor: ${doctorId}, hospital: ${hospitalId}`,
       );
-
+      console.log(bookAppointmentDto.appointmentDate, "dateOfapp")
+      const appointmentDate = new Date(bookAppointmentDto.appointmentDate);
+      console.log(appointmentDate.toString(), "date");
+      const daysOfWeek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+      const dayOfWeek = daysOfWeek[appointmentDate.getDay()];
+      const doctor = await this.userModel.findById(doctorId).session(session)
+      const availableDays = doctor.availableDays
+      if (!availableDays.includes(dayOfWeek)) {
+        throw new CustomError(`Doctor are not available on ${dayOfWeek}`)
+      }
       const newAppointment = new this.appointmentModel({
         ...bookAppointmentDto,
         hospital: new Types.ObjectId(hospitalId),
