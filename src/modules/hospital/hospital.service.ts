@@ -26,7 +26,6 @@ export class HospitalService {
   ): Promise<any> {
     try {
       const skip = (page - 1) * limit;
-
       const aggregation = await this.userModel.aggregate([
         {
           $match: {
@@ -36,9 +35,31 @@ export class HospitalService {
           },
         },
         {
+          $lookup:{
+            from:"users",
+            localField:'doctors',
+            foreignField:'_id',
+            as:'doctorsEnrolled'
+          }
+        },
+        {
           $project: {
             password: 0,
             refreshToken: 0,
+            createdAt:0,
+            updatedAt:0,
+            __v:0,
+            doctors:0,
+            doctorsEnrolled:{
+              password:0,
+              refreshToken:0,
+              createdAt:0,
+              updatedAt:0,
+              appointmentRecords:0,
+              profilePicture:0,
+              isPhoneVerified:0,
+              __v:0
+            }
           },
         },
         {

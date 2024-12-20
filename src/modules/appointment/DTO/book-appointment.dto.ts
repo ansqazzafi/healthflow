@@ -1,12 +1,12 @@
 import { Transform } from 'class-transformer';
-import { IsDate, IsEnum, IsMongoId, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { IsDate, IsDateString, IsEnum, IsMongoId, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 import { AppointmentStatus } from 'enums/appointment.enum';
 import { AppointmentType } from 'enums/appointment.enum';
 
 export class BookAppointmentDto {
-  @Transform(({ value }) => new Date(value)) 
-  @IsDate()
-  appointmentDate: Date; 
+  @IsNotEmpty()
+  @IsDateString()
+  appointmentDate: string; 
 
   @IsNotEmpty()
   @IsString()

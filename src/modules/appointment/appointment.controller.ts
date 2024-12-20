@@ -46,57 +46,9 @@ export class AppointmentController {
     );
     return this.responseHandler.successHandler(
       true,
-      'Appointment Booked Successfully, wait for Approval',
+      'Thanks for Booked Appointment, you will get a Confirmation Email, Wait for Approval',
     );
   }
-
-  // @Patch(':appointmentId/:status')
-  // public async updateAppointmentStatus(
-  //   @Req() req: Request,
-  //   @Param('appointmentId') appointmentId: string,
-  //   @Param('status') status: AppointmentStatus,
-  //   @Body() Body?: { cancelledReason: string },
-  // ): Promise<SuccessHandler<any>> {
-  //   const { id, role } = req.user;
-  //   let reason = '';
-  //   if (Body && Body.cancelledReason) {
-  //     reason = Body.cancelledReason;
-  //   }
-  //   if (role !== roles.doctor && role !== roles.patient) {
-  //     throw new CustomError(
-  //       'You are not authorized to update the appointment',
-  //       401,
-  //     );
-  //   }
-
-  //   if (role === roles.patient && status !== AppointmentStatus.CANCELLED) {
-  //     throw new CustomError('Patients can only cancel appointments', 403);
-  //   }
-
-  //   const validStatuses = [
-  //     AppointmentStatus.PENDING,
-  //     AppointmentStatus.CANCELLED,
-  //     AppointmentStatus.APPROVED,
-  //     AppointmentStatus.COMPLETED,
-  //     AppointmentStatus.MISSED,
-  //   ];
-
-  //   if (!validStatuses.includes(status)) {
-  //     throw new CustomError('Invalid status transition', 400);
-  //   }
-  //   const response = await this.appointmentService.updateAppointmentStatus(
-  //     id,
-  //     role,
-  //     appointmentId,
-  //     status,
-  //     reason,
-  //   );
-
-  //   return this.responseHandler.successHandler(
-  //     true,
-  //     `Appointment ${status} successfully`,
-  //   );
-  // }
 
   @Get()
   public async findAppointments(
@@ -146,18 +98,18 @@ export class AppointmentController {
   @Patch(':appointmentId')
   public async updateAppointmentRecord(
     @Req() req: Request,
-    @Param('appointmentId') appointmentId:string,
+    @Param('appointmentId') appointmentId: string,
     @Body() updateAppointmentDto?: UpdateAppointment
   ) {
     console.log("Entered");
-    
+
 
     const { id, role } = req.user
     console.log("Controller:", id, role, appointmentId)
     if (role !== roles.doctor) {
       throw new CustomError("Only Doctor can Update the Appointment", 402)
     }
-    const response = await this.appointmentService.updateAppointmentRecord(id, role,appointmentId, updateAppointmentDto)
+    const response = await this.appointmentService.updateAppointmentRecord(id, role, appointmentId, updateAppointmentDto)
     return this.responseHandler.successHandler(response, "Appointment Record updated Successfully")
 
   }

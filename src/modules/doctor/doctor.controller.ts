@@ -55,6 +55,7 @@ export class DoctorController {
 
   @Get()
   public async findDoctors(
+    @Req() req:Request,
     @Query('name') name?: string,
     @Query('page') page: string = '1',
     @Query('limit') limit: string = '10',
@@ -63,12 +64,14 @@ export class DoctorController {
     @Query('hospitalId') hospitalId?: string,
     @Query('avaliablity') availablity?: string,
   ): Promise<SuccessHandler<any>> {
+    const {role} = req.user
     console.log(page, limit, specialty, city, hospitalId);
     const newPage = parseInt(page, 10);
     const newLimit = parseInt(limit, 10);
     const response = await this.doctorService.findDoctors(
       newPage,
       newLimit,
+      role,
       city,
       specialty,
       hospitalId,

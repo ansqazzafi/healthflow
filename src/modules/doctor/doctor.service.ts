@@ -17,6 +17,7 @@ import { Types } from 'twilio/lib/rest/content/v1/content';
 import { Appointment, AppointmentDocument } from '../appointment/appointment.schema';
 import { NodemailerModule } from 'src/modules/nodemailer/nodemailer.module';
 import { NodemailerService } from 'src/modules/nodemailer/nodemailer.service';
+import { roles } from 'enums/role.enum';
 
 @Injectable()
 export class DoctorService {
@@ -91,12 +92,14 @@ export class DoctorService {
   public async findDoctors(
     page: number,
     limit: number,
+    role:string,
     city: string,
     specialty?: string,
     hospitalId?: string,
     avaliablity?: string,
-    name?: string
+    name?: string,
   ): Promise<any> {
+    console.log(name, role, avaliablity)
     try {
       const avaliablityArray = [];
       avaliablityArray.push(avaliablity);
@@ -115,9 +118,73 @@ export class DoctorService {
           },
         },
         {
+          $addFields: {
+            hospital: { $toObjectId: "$hospital" },  
+          },
+        },
+        {
+          $lookup: {
+            from: 'appointments',
+            localField: 'appointmentRecords', 
+            foreignField: '_id', 
+            as: 'appointmentsRecords', 
+          },
+        },
+        {
+          $lookup: {
+            from: 'users',
+            localField: 'hospital', 
+            foreignField: '_id', 
+            as: 'hospitalEnrolled', 
+          },
+        },
+        {
+          $project: {
+            password:0,
+            refreshToken:0,
+            appointmentRecords: 0,
+            hospital:0,
+            updatedAt:0,
+            createdAt:0,
+            hospitalEnrolled: { 
+              password: 0,
+              refreshToken:0,
+              role:0,
+              doctors:0,
+              appointmentRecords:0,
+              isActive:0,
+              isPhoneVerified:0,
+              medicalLicense:0,
+              createdAt:0,
+              updatedAt:0,
+              __v:0
+            },
+          },
+        },
+        {
           $facet: {
             doctors: [{ $skip: skip }, { $limit: limit }],
             totalCount: [{ $count: 'count' }],
+            totalPendingAppointments: [
+              { $unwind: '$appointmentsRecords' }, 
+              { $match: { 'appointmentsRecords.status': 'PENDING' } },
+              { $count: 'pendingCount' }
+            ],
+            totalApprovedAppointments: [
+              { $unwind: '$appointmentsRecords' }, 
+              { $match: { 'appointmentsRecords.status': 'APPROVED' } },
+              { $count: 'approvedCount' }
+            ],
+            totalCancelledAppointments: [
+              { $unwind: '$appointmentsRecords' }, 
+              { $match: { 'appointmentsRecords.status': 'CANCELLED' } },
+              { $count: 'cancelledCount' }
+            ],
+            totalCompletedAppointments: [
+              { $unwind: '$appointmentsRecords' }, 
+              { $match: { 'appointmentsRecords.status': 'COMPLETED' } },
+              { $count: 'completedCount' }
+            ],
           },
         },
       ]);
@@ -127,6 +194,10 @@ export class DoctorService {
       const result = {
         doctors: aggregation[0]?.doctors || [],
         totalCount: aggregation[0]?.totalCount[0]?.count || 0,
+        PendingAppointments:aggregation[0].totalPendingAppointments[0]?.pendingCount || 0,
+        ApprovedAppointments:aggregation[0].totalApprovedAppointments[0]?.approvedCount || 0,
+        CancelledAppointments:aggregation[0].totalCancelledAppointments[0]?.cancelledCount || 0,
+        CompletedAppointments:aggregation[0].totalCompletedAppointments[0]?.completedCount || 0,
       };
       return result;
     } catch (error) {
@@ -267,5 +338,10 @@ export class DoctorService {
 
       session.endSession();
     }
+  }
+
+  public async findDoctor(id: string): Promise<any> {
+    const doctor = await this.userModel.findById(id)
+    return doctor
   }
 }

@@ -10,6 +10,11 @@ import { AuthService } from '../auth/auth.service';
 import * as bcrypt from 'bcrypt';
 @Injectable()
 export class UserService {
-  constructor(
-  ) { }
+  constructor(@InjectModel(User.name) private userModel:Model<UserDocument>) {}
+
+  
+  public async findUser(id:string):Promise<any>{
+    const patient = await this.userModel.findById(id)
+    return patient
+  }
 }
