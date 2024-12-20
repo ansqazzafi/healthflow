@@ -15,9 +15,6 @@ import { Request } from 'express';
 import { roles } from 'enums/role.enum';
 import { CustomError } from 'utility/custom-error';
 import { ResponseHandler } from 'utility/success-response';
-import { log } from 'node:console';
-import { stat } from 'node:fs';
-import { AppointmentStatus } from 'enums/appointment.enum';
 import { UpdateAppointment } from './DTO/update-appointment-details';
 @Controller('appointment')
 export class AppointmentController {

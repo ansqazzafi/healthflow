@@ -15,7 +15,7 @@ export class Appointment {
 
   @Prop({ required: true })
   appointmentDate: Date;
-  
+
 
   @Prop({
     required: true,

@@ -19,6 +19,7 @@ export class DepartmentModule implements NestModule {
             .forRoutes(
                 { path: 'department', method: RequestMethod.POST },
                 { path: 'department', method: RequestMethod.DELETE },
+                { path: 'department', method: RequestMethod.GET },
             );
     }
 }

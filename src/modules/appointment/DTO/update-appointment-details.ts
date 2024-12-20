@@ -1,13 +1,11 @@
 import { Transform } from 'class-transformer';
 import {
-  IsDate,
   IsDateString,
   IsEnum,
-  IsMongoId,
   IsOptional,
   IsString,
 } from 'class-validator';
-import { AppointmentStatus, AppointmentType } from 'enums/appointment.enum';
+import { AppointmentStatus } from 'enums/appointment.enum';
 
 
 export class UpdateAppointment {

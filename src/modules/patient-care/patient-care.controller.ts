@@ -4,6 +4,7 @@ import {
   Get,
   Param,
   Patch,
+  Post,
   Query,
   Req,
   UseGuards,
@@ -16,6 +17,7 @@ import { roles } from 'enums/role.enum';
 import { CustomError } from 'utility/custom-error';
 import { Request } from 'express';
 import { VerifyAdminGuard } from 'guards/verify-admin.guard';
+import { ReportQuery } from './DTO/report-query';
 @Controller('patient-care')
 export class PatientCareController {
   constructor(
@@ -73,5 +75,18 @@ export class PatientCareController {
       response,
       'patient Care Staff profile updated',
     );
+  }
+
+  @Post()
+  public async reportPatientQuery(
+    @Req() req:Request,
+    @Body() ReportQuery:ReportQuery
+  ):Promise<SuccessHandler<any>>{
+    const {id, role} = req.user
+    if(role !== roles.patient){
+      throw new CustomError("This Feature is only available for Patients",402)
+    }
+    const response = await this.patientCareService.reportPatientQuery(id,ReportQuery)
+    return this.responseHandler.successHandler(true, "Your Report has been sent to patientCare Staff you will get a Confirmation Call")
   }
 }

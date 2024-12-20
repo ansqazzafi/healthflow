@@ -17,13 +17,13 @@ import { NodemailerModule } from 'src/modules/nodemailer/nodemailer.module';
   providers: [AdminService, ResponseHandler, JwtService],
   controllers: [AdminController],
 })
-export class AdminModule implements NestModule{
+export class AdminModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     consumer
       .apply(JwtMiddleware)
-       .forRoutes(
+      .forRoutes(
         { path: 'admin', method: RequestMethod.PATCH },
         { path: 'admin/accounts/verify', method: RequestMethod.POST }
-       );
+      );
   }
- }
+}

@@ -11,8 +11,10 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { JwtMiddleware } from 'middlewares/verify-jwt.middlware';
 import { ResponseHandler } from 'utility/success-response';
 import { JwtService } from '@nestjs/jwt';
+import { NodemailerModule } from '../nodemailer/nodemailer.module';
 @Module({
   imports: [
+    NodemailerModule,
     MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
   ],
   controllers: [PatientCareController],
@@ -26,7 +28,8 @@ export class PatientCareModule implements NestModule {
       .forRoutes(
         { path: 'patient-care', method: RequestMethod.PATCH },
         { path: 'patient-care', method: RequestMethod.GET },
-        { path: 'patient-care/:id', method: RequestMethod.GET }
+        { path: 'patient-care/:id', method: RequestMethod.GET },
+        { path: 'patient-care', method: RequestMethod.POST },
       );
   }
 }

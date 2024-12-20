@@ -10,8 +10,8 @@ import { UpdateAdminDTO } from './DTO/updatedto copy';
 @Controller('admin')
 export class AdminController {
   constructor(private readonly adminService: AdminService,
-    private readonly responseHandler:ResponseHandler
-  ) {}
+    private readonly responseHandler: ResponseHandler
+  ) { }
 
   @Post('accounts/verify')
   @UseGuards(VerifyAdminGuard)

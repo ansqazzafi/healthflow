@@ -66,4 +66,20 @@ export class DepartmentService {
         }
     }
 
+    public async findDepartments(id: string, role: string): Promise<any> {
+        try {
+            const hospital = await this.userModel.findById(id)
+            if (hospital.role !== role) {
+                throw new CustomError("Access Denied", 402)
+            }
+            const departments = hospital.departments
+            return departments
+        } catch (error) {
+            if (error instanceof CustomError) {
+                throw error
+            }
+            throw new CustomError("There is an error during fetch departments", 500)
+        }
+    }
+
 }

@@ -4,7 +4,6 @@ import { User, UserDocument } from '../user/user.schema';
 import { Model } from 'mongoose';
 import { CustomError } from 'utility/custom-error';
 import { JwtService } from '@nestjs/jwt';
-import { roles } from 'enums/role.enum';
 import { UpdateAdminDTO } from './DTO/updatedto copy';
 import { TwilioService } from '../twilio/twilio.service';
 import { NodemailerService } from 'src/modules/nodemailer/nodemailer.service';
@@ -29,7 +28,7 @@ export class AdminService {
     user.isActive = true;
     const updateUser = await user.save();
     await this.nodemailerService.sendMail(user.email, "Account Activated", `Congragulation Your Account corresponding ${user.email} at HealthFlow are Activated Successfully, Now you can login your account`, user.name)
-    if(updateUser.isActive !== true){
+    if (updateUser.isActive !== true) {
       throw new CustomError("Unable to verify account")
     }
     return { message: `User account verified successfully!` };

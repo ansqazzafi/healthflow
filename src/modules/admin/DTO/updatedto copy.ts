@@ -1,10 +1,7 @@
 import {
   IsString,
-  IsEmail,
-  IsNotEmpty,
   IsPhoneNumber,
   IsOptional,
-  IsEnum,
   IsObject,
 } from 'class-validator';
 import { Type } from 'class-transformer';

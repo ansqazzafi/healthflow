@@ -95,6 +95,7 @@ export class User extends Document implements IUser {
     type: [
       {
         patientId: { type: Types.ObjectId, ref: 'User', required: true },
+        email: { type: String, required: true },
         messageQuery: { type: String, required: true },
       },
     ],

@@ -1,11 +1,10 @@
-import { Controller, Req, Post, Body, Delete } from '@nestjs/common';
+import { Controller, Req, Post, Body, Delete, Get } from '@nestjs/common';
 import { DepartmentService } from './department.service';
 import { SuccessHandler } from 'interfaces/success-handler.interface';
 import { Request } from 'express';
 import { roles } from 'enums/role.enum';
 import { CustomError } from 'utility/custom-error';
 import { ResponseHandler } from 'utility/success-response';
-import { HospitalDepartment } from 'enums/departments.enum';
 import { AddDepartmentDto } from './DTO/add-department.dto';
 import { DeleteDepartmentDto } from './DTO/delete-department.dto';
 @Controller('department')
@@ -39,5 +38,18 @@ export class DepartmentController {
         }
         const response = await this.departmentService.deleteDepartment(id, deleteDepartmentDto.department)
         return this.responseHandler.successHandler(true, "Department Deleted Successfully")
+    }
+
+    @Get()
+    public async findDepartments(
+        @Req() req: Request
+    ): Promise<SuccessHandler<any>> {
+        const { id, role } = req.user
+        if (role !== roles.hospital) {
+            throw new CustomError("You didn't have right to access this route", 402)
+        }
+        const response = await this.departmentService.findDepartments(id, role)
+        return this.responseHandler.successHandler(response, "Departments found Successfully")
+
     }
 }
