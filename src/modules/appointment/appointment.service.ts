@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Appointment, AppointmentDocument } from './appointment.schema';
 import { ClientSession, Model, Types } from 'mongoose';
@@ -9,7 +9,8 @@ import { User } from '../user/user.schema';
 import { roles } from 'enums/role.enum';
 import { UpdateAppointment } from './DTO/update-appointment-details';
 import { NodemailerService } from 'src/modules/nodemailer/nodemailer.service';
-import { ConvertToDate } from 'utility/convert-to-date'
+import { ConvertToDate } from 'utility/convert-to-date';
+import { StripeService } from '../stripe/stripe.service';
 
 @Injectable()
 export class AppointmentService {
@@ -17,10 +18,10 @@ export class AppointmentService {
     @InjectModel(Appointment.name)
     private appointmentModel: Model<AppointmentDocument>,
     @InjectModel(User.name) private userModel: Model<any>,
-    private readonly nodemailerService: NodemailerService
-  ) { }
-
-
+    private readonly nodemailerService: NodemailerService,
+    @Inject(forwardRef(() => StripeService))
+    private readonly stripeService: StripeService,
+  ) {}
 
   public async BookAppointment(
     patientId: string,
@@ -40,7 +41,7 @@ export class AppointmentService {
       );
 
       await session.commitTransaction();
-      return response
+      return response;
     } catch (error) {
       await session.abortTransaction();
       session.endSession();
@@ -156,99 +157,154 @@ export class AppointmentService {
     doctorId: string,
     role: string,
     appointmentId: string,
-    updateDto: UpdateAppointment
+    updateDto: UpdateAppointment,
   ): Promise<any> {
     let updatedDate;
     try {
       const appointment = await this.appointmentModel.findById(appointmentId);
       if (!appointment) {
-        throw new CustomError("Appointment Not Found", 404);
+        throw new CustomError('Appointment Not Found', 404);
       }
       if (appointment.doctor.toString() !== doctorId) {
-        throw new CustomError("This Appointment are not associated with mentioned doctor")
+        throw new CustomError(
+          'This Appointment are not associated with mentioned doctor',
+        );
       }
 
       const patientDetails = await this.userModel.findById(appointment.patient);
-      const doctorDetails = await this.userModel.findById(appointment.doctor)
-
+      const doctorDetails = await this.userModel.findById(appointment.doctor);
       if (
         appointment.status === AppointmentStatus.COMPLETED ||
         appointment.status === AppointmentStatus.CANCELLED
       ) {
         if (updateDto.status) {
-          throw new CustomError("Cannot change status once it is completed, or cancelled", 400);
+          throw new CustomError(
+            'Cannot change status once it is completed, or cancelled',
+            400,
+          );
         }
       }
 
-      if (updateDto.status) {
-        if (updateDto.status === AppointmentStatus.COMPLETED && role === 'doctor') {
-          if (!updateDto.prescription) {
-            throw new CustomError("Prescription is required when status is completed", 400);
+      if (
+        updateDto.status === AppointmentStatus.APPROVED &&
+        appointment.Type === AppointmentType.Online &&
+        appointment.status === AppointmentStatus.PENDING
+      ) {
+        console.log("eNTERED");
+        
+        const paymentIntend = await this.stripeService.createPaymentIntend(
+          appointment._id.toString(),
+          patientDetails._id.toString(),
+          doctorDetails._id.toString(),
+          appointment.hospital.toString()
+        );
+        console.log(paymentIntend.client_secret, "intend");
+        
+        const paymentLink = `http://127.0.0.1:5500/src/payment.html?appointment_id=${appointment._id}&client_secret=${paymentIntend.client_secret}`;
+        await this.nodemailerService.sendMail(
+          patientDetails.email,
+          'Payment Request',
+          `Dear ${patientDetails.name},\n\nYour online appointment with Dr. ${doctorDetails.name} has been waiting for payment. Please complete your payment by clicking the link below:\n\n${paymentLink}\n\nThank you.`,
+          patientDetails.name,
+        );
+        return true
+      } else {
+        if (updateDto.status) {
+          if (
+            updateDto.status === AppointmentStatus.COMPLETED &&
+            role === 'doctor'
+          ) {
+            if (!updateDto.prescription) {
+              throw new CustomError(
+                'Prescription is required when status is completed',
+                400,
+
+              );
+            }
+          }
+
+          if (
+            updateDto.status === AppointmentStatus.CANCELLED &&
+            !updateDto.cancelledReason
+          ) {
+            throw new CustomError(
+              'Cancelled reason is required when status is cancelled',
+              400,
+            );
           }
         }
 
-        if (updateDto.status === AppointmentStatus.CANCELLED && !updateDto.cancelledReason) {
-          throw new CustomError("Cancelled reason is required when status is cancelled", 400);
+        const updateFields: any = {};
+        let isAppointmentDateUpdated = false;
+        if (updateDto.appointmentDate) {
+          updatedDate = ConvertToDate(updateDto.appointmentDate);
+          updateFields.appointmentDate = updatedDate;
+          isAppointmentDateUpdated = true;
         }
-      }
+        if (updateDto.status) {
+          updateFields.status = updateDto.status;
+        }
+        if (updateDto.cancelledReason) {
+          updateFields.cancelledReason = updateDto.cancelledReason;
+        }
+        if (updateDto.prescription) {
+          updateFields.prescription = updateDto.prescription;
+        }
 
-      const updateFields: any = {};
-      let isAppointmentDateUpdated = false;
-      if (updateDto.appointmentDate) {
-        updatedDate = ConvertToDate(updateDto.appointmentDate)
-        updateFields.appointmentDate = updatedDate;
-        isAppointmentDateUpdated = true
-      }
-      if (updateDto.status) {
-        updateFields.status = updateDto.status;
-      }
-      if (updateDto.cancelledReason) {
-        updateFields.cancelledReason = updateDto.cancelledReason;
-      }
-      if (updateDto.prescription) {
-        updateFields.prescription = updateDto.prescription;
-      }
+        const updatedAppointment =
+          await this.appointmentModel.findByIdAndUpdate(
+            appointmentId,
+            updateFields,
+            { new: true },
+          );
+        if (!updatedAppointment) {
+          throw new CustomError('Unable to Update the Appointment', 402);
+        }
 
-      const updatedAppointment = await this.appointmentModel.findByIdAndUpdate(appointmentId, updateFields, { new: true });
-      if (!updatedAppointment) {
-        throw new CustomError("Unable to Update the Appointment", 402);
-      }
+        let emailSubject = '';
+        let emailMessage = '';
 
-      let emailSubject = '';
-      let emailMessage = '';
+        switch (updateDto.status) {
+          case AppointmentStatus.COMPLETED:
+            emailSubject = 'Your Appointment Status: Completed';
+            emailMessage = `Dear ${patientDetails.name},\n\nYour appointment with Dr. ${doctorDetails.name} has been completed. A prescription has been provided. 
+            Precription: ${updateDto.prescription}`;
+            break;
+          case AppointmentStatus.CANCELLED:
+            emailSubject = 'Your Appointment Status: Cancelled';
+            emailMessage = `Dear ${patientDetails.name},\n\nYour appointment with Dr. ${doctorDetails.name} has been cancelled. Reason: ${updateDto.cancelledReason}`;
+            break;
+          case AppointmentStatus.APPROVED:
+            emailSubject = 'Your Appointment Status: APPROVED';
+            emailMessage = `Dear ${patientDetails.name},\n\nYour appointment with Dr. ${doctorDetails.name} has been Approved on ${appointment.appointmentDate.getDate()}`;
+            break;
+          default:
+            emailSubject = 'Your Appointment Status Update';
+            emailMessage = `Dear ${patientDetails.name},\n\nYour appointment status has been updated.`;
+        }
 
-      switch (updateDto.status) {
-        case AppointmentStatus.COMPLETED:
-          emailSubject = 'Your Appointment Status: Completed';
-          emailMessage = `Dear ${patientDetails.name},\n\nYour appointment with Dr. ${doctorDetails.name} has been completed. A prescription has been provided. 
-          Precription: ${updateDto.prescription}`;
-          break;
-        case AppointmentStatus.CANCELLED:
-          emailSubject = 'Your Appointment Status: Cancelled';
-          emailMessage = `Dear ${patientDetails.name},\n\nYour appointment with Dr. ${doctorDetails.name} has been cancelled. Reason: ${updateDto.cancelledReason}`;
-          break;
-        case AppointmentStatus.APPROVED:
-          emailSubject = 'Your Appointment Status: APPROVED';
-          emailMessage = `Dear ${patientDetails.name},\n\nYour appointment with Dr. ${doctorDetails.name} has been Approved on ${appointment.appointmentDate.getDate()}`
-          break;
-        default:
-          emailSubject = 'Your Appointment Status Update';
-          emailMessage = `Dear ${patientDetails.name},\n\nYour appointment status has been updated.`;
+        if (isAppointmentDateUpdated) {
+          emailSubject = 'Your Appointment Date Has Been Updated';
+          emailMessage = `Dear ${patientDetails.name},\n\nPlease be informed that the date for your appointment with Dr. ${doctorDetails.name} has been updated to ${updatedDate.toISOString().split('T')[0]}. Due to doctor unavailabilty`;
+        }
+        console.log(emailMessage, emailSubject, 'Details');
+        await this.nodemailerService.sendMail(
+          patientDetails.email,
+          emailSubject,
+          emailMessage,
+          patientDetails.name,
+        );
+        return updatedAppointment;
       }
-
-      if (isAppointmentDateUpdated) {
-        emailSubject = 'Your Appointment Date Has Been Updated';
-        emailMessage = `Dear ${patientDetails.name},\n\nPlease be informed that the date for your appointment with Dr. ${doctorDetails.name} has been updated to ${updatedDate.toISOString().split('T')[0]}. Due to doctor unavailabilty`;
-      }
-      console.log(emailMessage, emailSubject, "Details");
-      await this.nodemailerService.sendMail(patientDetails.email, emailSubject, emailMessage, patientDetails.name)
-      return updatedAppointment;
     } catch (error) {
-      console.log("Error:", error)
+      console.log('Error:', error);
       if (error instanceof CustomError) {
         throw error;
       }
-      throw new CustomError("There is an error during the updation of appointment", 500);
+      throw new CustomError(
+        'There is an error during the updation of appointment',
+        500,
+      );
     }
   }
 
@@ -259,14 +315,22 @@ export class AppointmentService {
     bookAppointmentDto: BookAppointmentDto,
     session: ClientSession,
   ): Promise<any> {
-    const daysOfWeek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+    const daysOfWeek = [
+      'Sunday',
+      'Monday',
+      'Tuesday',
+      'Wednesday',
+      'Thursday',
+      'Friday',
+      'Saturday',
+    ];
     try {
-      const appointmentDate = ConvertToDate(bookAppointmentDto.appointmentDate)
+      const appointmentDate = ConvertToDate(bookAppointmentDto.appointmentDate);
       const dayOfWeek = daysOfWeek[appointmentDate.getDay()];
-      const doctor = await this.userModel.findById(doctorId).session(session)
-      const availableDays = doctor.availableDays
+      const doctor = await this.userModel.findById(doctorId).session(session);
+      const availableDays = doctor.availableDays;
       if (!availableDays.includes(dayOfWeek)) {
-        throw new CustomError(`Doctor are not available on ${dayOfWeek}`)
+        throw new CustomError(`Doctor are not available on ${dayOfWeek}`);
       }
       const newAppointment = new this.appointmentModel({
         ...bookAppointmentDto,
@@ -274,7 +338,6 @@ export class AppointmentService {
         doctor: new Types.ObjectId(doctorId),
         patient: new Types.ObjectId(patientId),
       });
-
 
       const appointment = await newAppointment.save({ session });
 
@@ -330,7 +393,19 @@ export class AppointmentService {
   }
 
 
-
-
-
+  public async updateAppointmentTransactionRecordForOnline(appointmentId:string, paymentIntendId:string, transactionDate):Promise<any>{
+    await this.appointmentModel.findByIdAndUpdate(
+      appointmentId,
+      {
+        $set: {
+          status: AppointmentStatus.APPROVED, 
+          paymentTransactionId: paymentIntendId, 
+          paymentCompletedAt: transactionDate.toISOString(),
+          transactionStatus:'PAID' 
+        },
+      }
+    )
+  }
+  
 }
+

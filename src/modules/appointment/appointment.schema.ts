@@ -38,6 +38,16 @@ export class Appointment {
 
   @Prop({ required: false, enum: AppointmentType, })
   Type?: AppointmentType;
+
+  @Prop({required:false})
+  paymentTransactionId?:string
+
+  @Prop({required:false})
+  paymentCompletedAt?:string
+
+  @Prop({required:false})
+  transactionStatus?:string
+
 }
 
 export type AppointmentDocument = Appointment & Document;

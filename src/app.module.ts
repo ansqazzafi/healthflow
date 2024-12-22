@@ -24,6 +24,8 @@ import { NodemailerModule } from './modules/nodemailer/nodemailer.module';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import { ChatbotModule } from './modules/chatbot/chatbot.module';
+import { StripeService } from './modules/stripe/stripe.service';
+import { StripeModule } from './modules/stripe/stripe.module';
 
 @Module({
   imports: [
@@ -48,7 +50,8 @@ import { ChatbotModule } from './modules/chatbot/chatbot.module';
     AppointmentModule,
     DepartmentModule,
     NodemailerModule,
-    NodemailerModule
+    NodemailerModule,
+    StripeModule
   ],
   providers: [ResponseHandler, SeederService, DepartmentService, NodemailerService]
 })

@@ -1,4 +1,4 @@
-import { MiddlewareConsumer, Module, RequestMethod } from '@nestjs/common';
+import { forwardRef, MiddlewareConsumer, Module, RequestMethod } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { Appointment, AppointmentSchema } from './appointment.schema';
 import { AppointmentService } from './appointment.service';
@@ -9,6 +9,8 @@ import { JwtService } from '@nestjs/jwt';
 import { UserModule } from '../user/user.module';
 import { TwilioModule } from '../twilio/twilio.module';
 import { NodemailerModule } from 'src/modules/nodemailer/nodemailer.module';
+import { StripeService } from '../stripe/stripe.service';
+import { StripeModule } from '../stripe/stripe.module';
 
 MongooseModule;
 @Module({
@@ -16,6 +18,7 @@ MongooseModule;
     UserModule,
     TwilioModule,
     NodemailerModule,
+    forwardRef(()=>StripeModule),
     MongooseModule.forFeature([
       { name: Appointment.name, schema: AppointmentSchema },
     ]),

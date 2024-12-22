@@ -199,4 +199,13 @@ export class HospitalService {
       session.endSession();
     }
   }
+
+
+  public async findHospital(id:string):Promise<any>{
+    const hospital = await this.userModel.findById(id)
+    if(!hospital){
+      throw new CustomError("Hospital doesnot exist",404)
+    }
+    return hospital
+  }
 }
