@@ -38,6 +38,10 @@ export class AppointmentModule {
         { path: 'appointment/:appointmentId', method: RequestMethod.PATCH },
         { path: 'appointment', method: RequestMethod.GET },
         { path: 'appointment/:appointmentId', method: RequestMethod.GET },
+        { path: 'appointment/approve/:appointmentId', method: RequestMethod.PATCH },
+        { path: 'appointment/complete/:appointmentId', method: RequestMethod.PATCH },
+        { path: 'appointment/cancel/:appointmentId', method: RequestMethod.PATCH },
+        { path: 'appointment/update-appointment-date/:appointmentId', method: RequestMethod.PATCH },
       );
   }
 }

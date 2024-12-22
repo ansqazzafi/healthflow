@@ -21,7 +21,7 @@ export class AppointmentController {
   constructor(
     private readonly appointmentService: AppointmentService,
     private readonly responseHandler: ResponseHandler,
-  ) { }
+  ) {}
 
   @Post(':hospitalId/:doctorId')
   public async BookAppointment(
@@ -91,23 +91,174 @@ export class AppointmentController {
     );
   }
 
-
-  @Patch(':appointmentId')
-  public async updateAppointmentRecord(
+  @Patch('approve/:appointmentId')
+  public async approvedAppointment(
     @Req() req: Request,
     @Param('appointmentId') appointmentId: string,
-    @Body() updateAppointmentDto?: UpdateAppointment
   ) {
-    console.log("Entered");
-
-
-    const { id, role } = req.user
-    console.log("Controller:", id, role, appointmentId)
+    const { id, role } = req.user;
     if (role !== roles.doctor) {
-      throw new CustomError("Only Doctor can Update the Appointment", 402)
+      throw new CustomError('Access denied Only doctor can access it', 402);
     }
-    const response = await this.appointmentService.updateAppointmentRecord(id, role, appointmentId, updateAppointmentDto)
-    return this.responseHandler.successHandler(response, "Appointment Record updated Successfully")
+    const response =
+      await this.appointmentService.approvedAppointment(appointmentId);
+    return await this.responseHandler.successHandler(
+      true,
+      'Appointment approved',
+    );
+  }
+
+  @Patch('complete/:appointmentId')
+  public async completeAppointment(
+    @Req() req: Request,
+    @Param('appointmentId') appointmentId: string,
+    @Body() updateAppointment: UpdateAppointment,
+  ):Promise<SuccessHandler<any>> {
+    const { id, role } = req.user;
+    if (role !== roles.doctor) {
+      throw new CustomError('Access denied Only doctor can access it', 402);
+    }
+    if(!updateAppointment.prescription){
+      throw new CustomError("Precription are required to complete the appointment",401)
+    }
+    const response = await this.appointmentService.completeAppointment(
+      appointmentId,
+      updateAppointment,
+    );
+    return await this.responseHandler.successHandler(
+      true,
+      'Appointment completed successfully',
+    );
+  }
+  @Patch('cancel/:appointmentId')
+  public async cancelAppointment(
+    @Req() req: Request,
+    @Param('appointmentId') appointmentId: string,
+    @Body() updateAppointment: UpdateAppointment,
+  ):Promise<SuccessHandler<any>> {
+    const { id, role } = req.user;
+    if (role !== roles.doctor) {
+      throw new CustomError('Access denied Only doctor can access it', 402);
+    }
+    if(!updateAppointment.cancelledReason){
+      throw new CustomError("Cancelled Reason are required to complete the appointment",401)
+    }
+    const response = await this.appointmentService.cancelAppointment(
+      appointmentId,
+      updateAppointment,
+    );
+    return await this.responseHandler.successHandler(
+      true,
+      'Appointment cancelled successfully',
+    );
+  }
+
+  @Patch('update-appointment-date/:appointmentId')
+  public async updateAppointmentDate(
+    @Req() req:Request,
+    @Body() updateAppointment:UpdateAppointment,
+    @Param('appointmentId') appointmentId:string
+  ){
+    const { id, role } = req.user;
+    if (role !== roles.doctor) {
+      throw new CustomError('Access denied Only doctor can access it', 402);
+    }
+    if(!updateAppointment.appointmentDate){
+      throw new CustomError("Appointment Date are required to update the appointment",401)
+    }
+    const response = await this.appointmentService.updateAppointmentDate(
+      appointmentId,
+      updateAppointment,
+    );
+    return await this.responseHandler.successHandler(
+      true,
+      'Appointment Date updated successfully',
+    );
+    
 
   }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  // @Patch(':appointmentId')
+  // public async updateAppointmentRecord(
+  //   @Req() req: Request,
+  //   @Param('appointmentId') appointmentId: string,
+  //   @Body() updateAppointmentDto?: UpdateAppointment,
+  // ) {
+  //   console.log('Entered');
+
+  //   const { id, role } = req.user;
+  //   console.log('Controller:', id, role, appointmentId);
+  //   if (role !== roles.doctor) {
+  //     throw new CustomError('Only Doctor can Update the Appointment', 402);
+  //   }
+  //   const response = await this.appointmentService.updateAppointmentRecord(
+  //     id,
+  //     role,
+  //     appointmentId,
+  //     updateAppointmentDto,
+  //   );
+  //   return this.responseHandler.successHandler(
+  //     response,
+  //     'Appointment Record updated Successfully',
+  //   );
+  // }
 }
