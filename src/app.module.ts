@@ -26,6 +26,8 @@ import { join } from 'path';
 import { ChatbotModule } from './modules/chatbot/chatbot.module';
 import { StripeService } from './modules/stripe/stripe.service';
 import { StripeModule } from './modules/stripe/stripe.module';
+import { DailyVideoModule } from './modules/daily-video/daily-video.module';
+
 
 @Module({
   imports: [
@@ -51,7 +53,8 @@ import { StripeModule } from './modules/stripe/stripe.module';
     DepartmentModule,
     NodemailerModule,
     NodemailerModule,
-    StripeModule
+    StripeModule,
+    DailyVideoModule
   ],
   providers: [ResponseHandler, SeederService, DepartmentService, NodemailerService]
 })
