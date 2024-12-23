@@ -13,6 +13,14 @@ class AddressDto {
     city: string;
 }
 
+class AvailableHour {
+    @IsString()
+    start: string;
+  
+    @IsString()
+    end: string;
+  }
+
 export class RegisterDoctorDTO {
     @IsString()
     @IsNotEmpty()
@@ -67,7 +75,9 @@ export class RegisterDoctorDTO {
 
     @IsArray()
     @IsOptional()
-    availableHours?: string[];
+    @ValidateNested({ each: true })
+    @Type(() => AvailableHour)
+    availableHours?: AvailableHour[];
 
     @IsString()
     @IsOptional()

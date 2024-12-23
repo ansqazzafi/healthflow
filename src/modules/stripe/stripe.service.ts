@@ -46,6 +46,7 @@ export class StripeService {
           hospital_id: hospitalId,
         },
       });
+      console.log("Payment Intend Client Secret", paymentIntent.client_secret)
       return paymentIntent;
     } catch (error) {
       console.error('Error creating payment intent:', error);
@@ -82,7 +83,7 @@ export class StripeService {
       patient.email,
       'Appointment Approved',
       `Dear ${patient.name},\n\nYour Appointment with. ${doctor.name} corresponding ${hospital.name} has been Approved.\n\nThank you`,
-      hospital.name,
+      patient.name,
     );
   }
 }

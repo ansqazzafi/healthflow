@@ -74,8 +74,8 @@ export class User extends Document implements IUser {
   availableDays?: string[];
 
   @Prop()
-  availableHours?: string[];
-
+  availableHours?: { start: string, end: string }[];
+  
   @Prop()
   medicalLicense?: string;
 

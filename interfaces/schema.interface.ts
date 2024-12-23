@@ -23,7 +23,7 @@ export interface IUser {
   specialty?: Specialty;
   biography?: string;
   availableDays?: string[];
-  availableHours?: string[];
+  availableHours?: { start: string, end: string }[];
   medicalLicense?: string;
   CEO?: string;
   doctors?: Types.ObjectId[];

@@ -23,7 +23,7 @@ export class AppointmentService {
     @Inject(forwardRef(() => StripeService))
     private readonly stripeService: StripeService,
     private readonly userService: UserService,
-  ) {}
+  ) { }
 
   public async findAppointmentById(id: string): Promise<any> {
     const appointment = await this.appointmentModel.findById(id);
@@ -65,12 +65,18 @@ export class AppointmentService {
         doctor._id.toString(),
         hospital._id.toString(),
       );
+      console.log(paymentIntend, 'Payment intend');
       console.log(paymentIntend.client_secret, 'intend');
+
       const paymentLink = `http://127.0.0.1:5500/src/payment.html?appointment_id=${appointment._id}&client_secret=${paymentIntend.client_secret}`;
+
+
+      console.log(paymentLink, "Payment link")
+
       await this.nodemailerService.sendMail(
         patient.email,
         'Payment Request',
-        `Dear ${patient.name},\n\nYour online appointment with Dr. ${doctor.name} has been waiting for payment. Please complete your payment by clicking the link below:\n\n${paymentLink}\n\nThank you.`,
+        `Dear ${patient.name},\n\nYour online appointment with ${doctor.name} has been waiting for payment. Please complete your payment by clicking the link below:\n\n${paymentLink}\n\nThank you.`,
         patient.name,
       );
       return true;
@@ -335,6 +341,8 @@ export class AppointmentService {
       if (!availableDays.includes(dayOfWeek)) {
         throw new CustomError(`Doctor are not available on ${dayOfWeek}`);
       }
+
+
       const newAppointment = new this.appointmentModel({
         ...bookAppointmentDto,
         hospital: new Types.ObjectId(hospitalId),
@@ -409,6 +417,9 @@ export class AppointmentService {
       },
     });
   }
+
+
+
 
 
 
