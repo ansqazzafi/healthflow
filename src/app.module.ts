@@ -26,7 +26,7 @@ import { join } from 'path';
 import { ChatbotModule } from './modules/chatbot/chatbot.module';
 import { StripeService } from './modules/stripe/stripe.service';
 import { StripeModule } from './modules/stripe/stripe.module';
-import { DailyVideoModule } from './modules/daily-video/daily-video.module';
+import { GoogleMeetModule } from './modules/google-meet/google-meet.module';
 
 
 @Module({
@@ -54,7 +54,7 @@ import { DailyVideoModule } from './modules/daily-video/daily-video.module';
     NodemailerModule,
     NodemailerModule,
     StripeModule,
-    DailyVideoModule
+    GoogleMeetModule
   ],
   providers: [ResponseHandler, SeederService, DepartmentService, NodemailerService]
 })
