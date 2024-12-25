@@ -26,7 +26,9 @@ import { join } from 'path';
 import { ChatbotModule } from './modules/chatbot/chatbot.module';
 import { StripeService } from './modules/stripe/stripe.service';
 import { StripeModule } from './modules/stripe/stripe.module';
-import { GoogleMeetModule } from './modules/google-meet/google-meet.module';
+import { ZoomService } from './modules/zoom/zoom.service';
+import { ZoomController } from './modules/zoom/zoom.controller';
+import { ZoomModule } from './modules/zoom/zoom.module';
 
 
 @Module({
@@ -54,8 +56,9 @@ import { GoogleMeetModule } from './modules/google-meet/google-meet.module';
     NodemailerModule,
     NodemailerModule,
     StripeModule,
-    GoogleMeetModule
+    ZoomModule
   ],
-  providers: [ResponseHandler, SeederService, DepartmentService, NodemailerService]
+  providers: [ResponseHandler, SeederService, DepartmentService, NodemailerService, ZoomService],
+  controllers: [ZoomController]
 })
 export class AppModule { }
