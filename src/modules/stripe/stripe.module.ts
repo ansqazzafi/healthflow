@@ -12,14 +12,14 @@ import { DoctorModule } from '../doctor/doctor.module';
 import { ZoomModule } from '../zoom/zoom.module';
 
 @Module({
-  imports:[
+  imports: [
     NodemailerModule,
     ZoomModule,
-    forwardRef(()=>AppointmentModule),
+    forwardRef(() => AppointmentModule),
     UserModule
   ],
   controllers: [StripeController],
-  providers:[StripeService, ConfigService],
-  exports:[StripeService]
+  providers: [StripeService, ConfigService],
+  exports: [StripeService]
 })
-export class StripeModule {}
+export class StripeModule { }

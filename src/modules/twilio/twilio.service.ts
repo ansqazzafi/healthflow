@@ -1,11 +1,9 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import Twilio from 'twilio';
 import { CustomError } from 'utility/custom-error';
-import * as crypto from 'crypto';  // For generating random verification code
-import { ConfigService } from '@nestjs/config'; // To use environment variables
+import * as crypto from 'crypto';
+import { ConfigService } from '@nestjs/config';
 import { UserService } from '../user/user.service';
-import { UserModule } from '../user/user.module';
-import { Message } from 'twilio/lib/twiml/MessagingResponse';
 
 @Injectable()
 export class TwilioService {
@@ -32,7 +30,7 @@ export class TwilioService {
         body: message,
         from: this.configService.get<string>('TWILIO_PHONE_NUMBER'),
         to,
-        
+
       });
       if (!response) {
         throw new CustomError("Unable to send message", 401)
@@ -41,7 +39,7 @@ export class TwilioService {
 
     } catch (error) {
       console.log(error, "error");
-      
+
       if (error instanceof CustomError) {
         throw error
       }

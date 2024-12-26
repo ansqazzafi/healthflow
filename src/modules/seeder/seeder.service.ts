@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import mongoose, { Model } from 'mongoose';
+import { Model } from 'mongoose';
 import * as bcrypt from 'bcrypt';
 import { roles } from 'enums/role.enum';
 import { User, UserDocument } from '../user/user.schema';
@@ -19,8 +19,8 @@ export class SeederService {
     @InjectModel(User.name) private userModel: Model<UserDocument>,
     @InjectModel(Appointment.name)
     private appointmentModel: Model<AppointmentDocument>,
-    private readonly nodemailerService:NodemailerService
-  ) {}
+    private readonly nodemailerService: NodemailerService
+  ) { }
 
   async seed() {
     const admin = await this.userModel.findOne({ email: '0357bhabscsias20@gmail.com' });
@@ -42,26 +42,26 @@ export class SeederService {
     }
 
 
-      const patientCareMember = await this.userModel.findOne({
+    const patientCareMember = await this.userModel.findOne({
+      email: 'patientcare@gmail.com',
+    });
+    if (!patientCareMember) {
+      const hashedPassword = await bcrypt.hash('11111111', 10);
+      await this.userModel.create({
+        name: 'Ali Raza',
         email: 'patientcare@gmail.com',
+        password: hashedPassword,
+        phoneNumber: '0987654321',
+        isActive: true,
+        gender: gender.male,
+        role: roles.patientCare,
+        address: { country: 'Pakistan', city: 'Lahore' },
       });
-      if (!patientCareMember) {
-        const hashedPassword = await bcrypt.hash('11111111', 10);
-        await  this.userModel.create({
-          name: 'Ali Raza',
-          email: 'patientcare@gmail.com',
-          password: hashedPassword,
-          phoneNumber: '0987654321',
-          isActive: true,
-          gender: gender.male,
-          role: roles.patientCare,
-          address: { country: 'Pakistan', city: 'Lahore' },
-        });
-        this.logger.log('Patient care user created successfully');
-      } else {
-        this.logger.log('Patient care user already exists');
-        // }
-      }
+      this.logger.log('Patient care user created successfully');
+    } else {
+      this.logger.log('Patient care user already exists');
+      // }
+    }
   }
 }
 

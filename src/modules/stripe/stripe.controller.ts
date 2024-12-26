@@ -11,7 +11,7 @@ export class StripeController {
 
   constructor(
     private configService: ConfigService,
-    private readonly stripeService:StripeService
+    private readonly stripeService: StripeService
   ) {
     this.stripe = new Stripe(configService.get<string>('STRIPE_SECRET_KEY'), {
       apiVersion: '2024-12-18.acacia',
@@ -21,7 +21,7 @@ export class StripeController {
   @Post('webhook')
   @HttpCode(200)
   async handleStripeEvent(
-    @Req() request: Request, 
+    @Req() request: Request,
     @Headers('stripe-signature') signature: string
   ) {
     console.log("Entered in hook");
@@ -30,7 +30,7 @@ export class StripeController {
     let event: Stripe.Event;
     console.log(endpointSecret, "Secret");
 
-    const body = request.body;  
+    const body = request.body;
 
     try {
 
@@ -45,7 +45,6 @@ export class StripeController {
         console.log("Entered into payment intent succeeded");
         const paymentIntent = event.data.object as Stripe.PaymentIntent;
         await this.stripeService.updations(paymentIntent)
-          
         this.logger.log(`PaymentIntent ${paymentIntent.id} was successful!`);
         break;
 

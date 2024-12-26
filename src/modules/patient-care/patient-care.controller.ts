@@ -23,7 +23,7 @@ export class PatientCareController {
   constructor(
     private readonly patientCareService: PatientCareService,
     private readonly responseHandler: ResponseHandler,
-  ) {}
+  ) { }
 
   @Get()
   @UseGuards(VerifyAdminGuard)
@@ -79,14 +79,14 @@ export class PatientCareController {
 
   @Post()
   public async reportPatientQuery(
-    @Req() req:Request,
-    @Body() ReportQuery:ReportQuery
-  ):Promise<SuccessHandler<any>>{
-    const {id, role} = req.user
-    if(role !== roles.patient){
-      throw new CustomError("This Feature is only available for Patients",402)
+    @Req() req: Request,
+    @Body() ReportQuery: ReportQuery
+  ): Promise<SuccessHandler<any>> {
+    const { id, role } = req.user
+    if (role !== roles.patient) {
+      throw new CustomError("This Feature is only available for Patients", 402)
     }
-    const response = await this.patientCareService.reportPatientQuery(id,ReportQuery)
+    const response = await this.patientCareService.reportPatientQuery(id, ReportQuery)
     return this.responseHandler.successHandler(true, "Your Report has been sent to patientCare Staff you will get a Confirmation Call")
   }
 }
