@@ -3,12 +3,10 @@ import { CustomError } from 'utility/custom-error';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { User, UserDocument } from '../user/user.schema';
-
 import {
   Appointment,
   AppointmentDocument,
 } from '../appointment/appointment.schema';
-import { UserService } from '../user/user.service';
 import { UpdateHospitalDTO } from './DTO/update-hospital.dto';
 @Injectable()
 export class HospitalService {

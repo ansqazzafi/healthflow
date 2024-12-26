@@ -15,7 +15,6 @@ import { SuccessHandler } from 'interfaces/success-handler.interface';
 import { AuthService } from './auth.service';
 import { LoginInDTO } from 'DTO/login.dto';
 import { CustomError } from 'utility/custom-error';
-import { JwtService } from '@nestjs/jwt';
 @Controller('auth')
 export class AuthController {
   constructor(

@@ -1,23 +1,15 @@
-import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import { RegisterDoctorDTO } from './DTO/register-doctor.dto';
+import { Injectable } from '@nestjs/common';
 import { CustomError } from 'utility/custom-error';
 import { InjectModel } from '@nestjs/mongoose';
-import mongoose, { ClientSession, Model, ObjectId } from 'mongoose';
+import mongoose, { Model } from 'mongoose';
 import * as bcrypt from 'bcrypt';
-import { AuthService } from '../auth/auth.service';
 import { TwilioService } from '../twilio/twilio.service';
-import { Specialty } from 'enums/specialty.enum';
-import { gender } from 'enums/gender.enum';
-import { log } from 'node:console';
 import { UpdateDoctorDTO } from './DTO/update-doctor.dto';
 import { UserDocument, User } from '../user/user.schema';
 import { deletedDoctorMessage } from 'utility/deleted-doctor-message'
 import { RegisterDto } from 'DTO/register.dto';
-import { Types } from 'twilio/lib/rest/content/v1/content';
 import { Appointment, AppointmentDocument } from '../appointment/appointment.schema';
-import { NodemailerModule } from 'src/modules/nodemailer/nodemailer.module';
 import { NodemailerService } from 'src/modules/nodemailer/nodemailer.service';
-import { roles } from 'enums/role.enum';
 
 @Injectable()
 export class DoctorService {
@@ -92,7 +84,7 @@ export class DoctorService {
   public async findDoctors(
     page: number,
     limit: number,
-    role:string,
+    role: string,
     city: string,
     specialty?: string,
     hospitalId?: string,
@@ -119,45 +111,45 @@ export class DoctorService {
         },
         {
           $addFields: {
-            hospital: { $toObjectId: "$hospital" },  
+            hospital: { $toObjectId: "$hospital" },
           },
         },
         {
           $lookup: {
             from: 'appointments',
-            localField: 'appointmentRecords', 
-            foreignField: '_id', 
-            as: 'appointmentsRecords', 
+            localField: 'appointmentRecords',
+            foreignField: '_id',
+            as: 'appointmentsRecords',
           },
         },
         {
           $lookup: {
             from: 'users',
-            localField: 'hospital', 
-            foreignField: '_id', 
-            as: 'hospitalEnrolled', 
+            localField: 'hospital',
+            foreignField: '_id',
+            as: 'hospitalEnrolled',
           },
         },
         {
           $project: {
-            password:0,
-            refreshToken:0,
+            password: 0,
+            refreshToken: 0,
             appointmentRecords: 0,
-            hospital:0,
-            updatedAt:0,
-            createdAt:0,
-            hospitalEnrolled: { 
+            hospital: 0,
+            updatedAt: 0,
+            createdAt: 0,
+            hospitalEnrolled: {
               password: 0,
-              refreshToken:0,
-              role:0,
-              doctors:0,
-              appointmentRecords:0,
-              isActive:0,
-              isPhoneVerified:0,
-              medicalLicense:0,
-              createdAt:0,
-              updatedAt:0,
-              __v:0
+              refreshToken: 0,
+              role: 0,
+              doctors: 0,
+              appointmentRecords: 0,
+              isActive: 0,
+              isPhoneVerified: 0,
+              medicalLicense: 0,
+              createdAt: 0,
+              updatedAt: 0,
+              __v: 0
             },
           },
         },
@@ -166,22 +158,22 @@ export class DoctorService {
             doctors: [{ $skip: skip }, { $limit: limit }],
             totalCount: [{ $count: 'count' }],
             totalPendingAppointments: [
-              { $unwind: '$appointmentsRecords' }, 
+              { $unwind: '$appointmentsRecords' },
               { $match: { 'appointmentsRecords.status': 'PENDING' } },
               { $count: 'pendingCount' }
             ],
             totalApprovedAppointments: [
-              { $unwind: '$appointmentsRecords' }, 
+              { $unwind: '$appointmentsRecords' },
               { $match: { 'appointmentsRecords.status': 'APPROVED' } },
               { $count: 'approvedCount' }
             ],
             totalCancelledAppointments: [
-              { $unwind: '$appointmentsRecords' }, 
+              { $unwind: '$appointmentsRecords' },
               { $match: { 'appointmentsRecords.status': 'CANCELLED' } },
               { $count: 'cancelledCount' }
             ],
             totalCompletedAppointments: [
-              { $unwind: '$appointmentsRecords' }, 
+              { $unwind: '$appointmentsRecords' },
               { $match: { 'appointmentsRecords.status': 'COMPLETED' } },
               { $count: 'completedCount' }
             ],
@@ -194,10 +186,10 @@ export class DoctorService {
       const result = {
         doctors: aggregation[0]?.doctors || [],
         totalCount: aggregation[0]?.totalCount[0]?.count || 0,
-        PendingAppointments:aggregation[0].totalPendingAppointments[0]?.pendingCount || 0,
-        ApprovedAppointments:aggregation[0].totalApprovedAppointments[0]?.approvedCount || 0,
-        CancelledAppointments:aggregation[0].totalCancelledAppointments[0]?.cancelledCount || 0,
-        CompletedAppointments:aggregation[0].totalCompletedAppointments[0]?.completedCount || 0,
+        PendingAppointments: aggregation[0].totalPendingAppointments[0]?.pendingCount || 0,
+        ApprovedAppointments: aggregation[0].totalApprovedAppointments[0]?.approvedCount || 0,
+        CancelledAppointments: aggregation[0].totalCancelledAppointments[0]?.cancelledCount || 0,
+        CompletedAppointments: aggregation[0].totalCompletedAppointments[0]?.completedCount || 0,
       };
       return result;
     } catch (error) {

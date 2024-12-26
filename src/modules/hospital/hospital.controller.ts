@@ -2,8 +2,6 @@ import {
   Body,
   Controller,
   Req,
-  Post,
-  UsePipes,
   Query,
   Get,
   Param,
@@ -12,15 +10,10 @@ import {
   Patch,
 } from '@nestjs/common';
 import { HospitalService } from './hospital.service';
-import { RegisterDto } from 'DTO/register.dto';
 import { SuccessHandler } from 'interfaces/success-handler.interface';
 import { CustomError } from 'utility/custom-error';
 import { ResponseHandler } from 'utility/success-response';
 import { Request } from 'express';
-import { HashPasswordPipe } from 'pipes/hash-password.pipe';
-import { Specialty } from 'enums/specialty.enum';
-import { gender } from 'enums/gender.enum';
-import { log } from 'node:console';
 import { VerifyAdminGuard } from 'guards/verify-admin.guard';
 import { UpdateHospitalDTO } from './DTO/update-hospital.dto';
 @Controller('hospital')
@@ -33,7 +26,7 @@ export class HospitalController {
 
   @Get()
   public async findHospitals(
-    @Query('name') name?:string,
+    @Query('name') name?: string,
     @Query('page') page: string = '1',
     @Query('limit') limit: string = '10',
     @Query('city') city?: string,
@@ -81,7 +74,7 @@ export class HospitalController {
   ): Promise<SuccessHandler<any>> {
     const { id, role } = req.user;
     console.log("Entered In Updae", id, role);
-    
+
     if (role !== 'hospital') {
       throw new CustomError('Cannot delete the hospital');
     }

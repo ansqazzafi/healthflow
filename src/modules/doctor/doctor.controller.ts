@@ -4,7 +4,6 @@ import {
   Controller,
   Post,
   Req,
-  UsePipes,
   Query,
   Param,
   Patch,
@@ -12,7 +11,6 @@ import {
 } from '@nestjs/common';
 import { RegisterDto } from 'DTO/register.dto';
 import { SuccessHandler } from 'interfaces/success-handler.interface';
-import { HashPasswordPipe } from 'pipes/hash-password.pipe';
 import { CustomError } from 'utility/custom-error';
 import { DoctorService } from './doctor.service';
 import { ResponseHandler } from 'utility/success-response';
@@ -55,7 +53,7 @@ export class DoctorController {
 
   @Get()
   public async findDoctors(
-    @Req() req:Request,
+    @Req() req: Request,
     @Query('name') name?: string,
     @Query('page') page: string = '1',
     @Query('limit') limit: string = '10',
@@ -64,7 +62,7 @@ export class DoctorController {
     @Query('hospitalId') hospitalId?: string,
     @Query('avaliablity') availablity?: string,
   ): Promise<SuccessHandler<any>> {
-    const {role} = req.user
+    const { role } = req.user
     console.log(page, limit, specialty, city, hospitalId);
     const newPage = parseInt(page, 10);
     const newLimit = parseInt(limit, 10);

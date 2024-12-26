@@ -1,26 +1,20 @@
-import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import { UserService } from '../user/user.service';
-import { ResponseHandler } from 'utility/success-response';
+import { Injectable } from '@nestjs/common';
 import { CustomError } from 'utility/custom-error';
 import { TwilioService } from '../twilio/twilio.service';
-import { DoctorService } from '../doctor/doctor.service';
-import { HospitalService } from '../hospital/hospital.service';
 import { LoginInDTO } from 'DTO/login.dto';
 import { JwtService } from '@nestjs/jwt';
 import { User, UserDocument } from '../user/user.schema';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { roles } from 'enums/role.enum';
-import { response } from 'express';
 import * as bcrypt from 'bcrypt'
-import { log } from 'node:console';
 import { NodemailerService } from 'src/modules/nodemailer/nodemailer.service';
 @Injectable()
 export class AuthService {
   constructor(
     private readonly twilioService: TwilioService,
     private readonly jwtService: JwtService,
-    private readonly nodemailerService:NodemailerService,
+    private readonly nodemailerService: NodemailerService,
     @InjectModel(User.name) private userModel: Model<UserDocument>,
   ) { }
 
@@ -50,7 +44,7 @@ export class AuthService {
     try {
       const { role, ...details } = RegisterDto;
       console.log(RegisterDto, "DTO");
-      
+
       if (role === roles.doctor) {
         throw new CustomError("Only hospital can register doctor")
       }
