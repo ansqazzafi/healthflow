@@ -36,7 +36,7 @@
       } else {
         if (paymentIntent.status === 'succeeded') {
           document.getElementById('payment-message').innerText = 'Payment successful!';
-          window.location.href = `/payment-confirmation/${appointmentId}`;
+          alert("Payment Completed Successfully, Thanks for Making Payment You will Get a confirmation Email soom")
         }
       }
     });
