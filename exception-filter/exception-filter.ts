@@ -4,7 +4,6 @@ import { CustomError } from 'utility/custom-error';
 @Catch(Error)
 export class CustomExceptionFilter implements ExceptionFilter {
   catch(exception: Error, host: ArgumentsHost) {
-    console.log('CustomExceptionFilter triggered for Error!');
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
     const request = ctx.getRequest<Request>();
@@ -17,7 +16,6 @@ export class CustomExceptionFilter implements ExceptionFilter {
       statusCode: status,
       message: message,
       data: data,
-      timestamp: new Date().toISOString(),
       path: request.url,
     });
   }

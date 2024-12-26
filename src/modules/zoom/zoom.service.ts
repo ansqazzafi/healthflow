@@ -1,5 +1,6 @@
 import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import axios from 'axios';
+import { CustomError } from 'utility/custom-error';
 
 @Injectable()
 export class ZoomService {
@@ -17,30 +18,29 @@ export class ZoomService {
       });
       return response.data.access_token;
     } catch (error) {
-      throw new HttpException(
+      throw new CustomError(
         'Failed to get Zoom access token',
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
 
-  public async createMeeting(): Promise<any> {
+  public async createMeeting(appointmentDate): Promise<any> {
     const token = await this.getAccessToken();
-    console.log(token, "TOken are here")
-    const url = `https://api.zoom.us/v2/users/meetings`;
-
+    console.log(token, "Token is here");
+    const url = `https://api.zoom.us/v2/users/me/meetings`;
     try {
       const response = await axios.post(
         url,
         {
-          topic:"Online Consultation",
+          topic: "Online Consultation",
           type: 2,
-          start_time: '2024-12-31T10:00:00Z', // Format: YYYY-MM-DDTHH:mm:ssZ
-          duration:60, // In minutes
+          start_time: appointmentDate,
+          duration: 60,
           settings: {
             host_video: true,
             participant_video: true,
-            waiting_room: true, 
+            waiting_room: true,
           },
         },
         {
@@ -51,11 +51,19 @@ export class ZoomService {
         },
       );
 
-      return response
+      const responseData = {
+        id: response.data.id,
+        password: response.data.password,
+        join_url: response.data.join_url
+      }
 
-     
+      return responseData;
     } catch (error) {
-      throw new HttpException(
+      console.error(error);
+      if (error instanceof CustomError) {
+        throw error;
+      }
+      throw new CustomError(
         'Failed to create Zoom meeting',
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
@@ -63,3 +71,7 @@ export class ZoomService {
   }
 
 }
+
+
+
+

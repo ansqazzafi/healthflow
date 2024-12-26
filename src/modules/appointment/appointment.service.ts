@@ -408,7 +408,7 @@ export class AppointmentService {
     paymentIntendId: string,
     transactionDate,
   ): Promise<any> {
-    await this.appointmentModel.findByIdAndUpdate(appointmentId, {
+    const updatedAppointment = await this.appointmentModel.findByIdAndUpdate(appointmentId, {
       $set: {
         status: AppointmentStatus.APPROVED,
         paymentTransactionId: paymentIntendId,
@@ -416,6 +416,7 @@ export class AppointmentService {
         transactionStatus: 'PAID',
       },
     });
+    return updatedAppointment
   }
 
 

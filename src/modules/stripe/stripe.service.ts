@@ -1,15 +1,9 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { User, UserDocument } from '../user/user.schema';
-import { Model } from 'mongoose';
 import Stripe from 'stripe';
 import { AppointmentService } from '../appointment/appointment.service';
-import { DoctorService } from '../doctor/doctor.service';
-import { error } from 'console';
-import { CustomError } from 'utility/custom-error';
-import { HospitalService } from '../hospital/hospital.service';
 import { NodemailerService } from '../nodemailer/nodemailer.service';
 import { UserService } from '../user/user.service';
+import { ZoomService } from '../zoom/zoom.service';
 
 @Injectable()
 export class StripeService {
@@ -19,6 +13,7 @@ export class StripeService {
     private readonly appointmentService: AppointmentService,
     private readonly userservice: UserService,
     private readonly nodemailerService: NodemailerService,
+    private readonly zoomService: ZoomService
   ) {
     this.stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
       apiVersion: '2024-12-18.acacia',
@@ -67,22 +62,27 @@ export class StripeService {
         paymentIntend.id,
         transactionDate,
       );
+    const meetingCredentials = await this.zoomService.createMeeting(updatedAppoinmet.appointmentDate)
+    console.log(meetingCredentials, "Meeting Credentials");
+
     await this.nodemailerService.sendMail(
       doctor.email,
       'Payment Approved',
-      `Dear ${doctor.name},\n\nYour online appointment with. ${patient.name} has been Approved by Healthflow ${patient.name} Performed his transaction for online successfully.\n\nThank you`,
+      `Dear ${doctor.name},\n\nThe appointment with ${patient.name} for doctor ${doctor.name} has been approved by Healthflow. ${patient.name} successfully completed their transaction for the online consultation.\n\nYour meeting URL is:\n${meetingCredentials.join_url}\n\nMeeting ID:\n${meetingCredentials.id}\nPassword:\n${meetingCredentials.password}\n\nThank you.`,
       doctor.name,
     );
+
     await this.nodemailerService.sendMail(
       hospital.email,
       'Payment Approved',
-      `Hey ${hospital.name},\n\nAppointment with. ${patient.name} corresponding ${doctor.name} has been Approved by Healthflow ${patient.name} Performed his transaction for online successfully.\n\nThank you`,
+      `Hey ${hospital.name},\n\nThe appointment with ${patient.name} for doctor ${doctor.name} has been approved by Healthflow. ${patient.name} successfully completed their transaction for the online consultation.\n\nYour meeting URL is:\n${meetingCredentials.join_url}\n\nMeeting ID:\n${meetingCredentials.id}\nPassword:\n${meetingCredentials.password}\n\nThank you.`,
       hospital.name,
     );
+
     await this.nodemailerService.sendMail(
       patient.email,
       'Appointment Approved',
-      `Dear ${patient.name},\n\nYour Appointment with. ${doctor.name} corresponding ${hospital.name} has been Approved.\n\nThank you`,
+      `Dear ${patient.name},\n\nYour appointment with ${doctor.name} corresponding hospital ${hospital.name} has been approved by Healthflow.\n\nYour meeting URL is:\n${meetingCredentials.join_url}\n\nMeeting ID:\n${meetingCredentials.id}\nPassword:\n${meetingCredentials.password}\n\nThank you.`,
       patient.name,
     );
   }

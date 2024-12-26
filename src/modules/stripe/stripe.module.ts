@@ -9,10 +9,12 @@ import { NodemailerModule } from '../nodemailer/nodemailer.module';
 import { DoctorService } from '../doctor/doctor.service';
 import { HospitalModule } from '../hospital/hospital.module';
 import { DoctorModule } from '../doctor/doctor.module';
+import { ZoomModule } from '../zoom/zoom.module';
 
 @Module({
   imports:[
     NodemailerModule,
+    ZoomModule,
     forwardRef(()=>AppointmentModule),
     UserModule
   ],

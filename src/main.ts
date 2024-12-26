@@ -4,9 +4,10 @@ import { SeederService } from './modules/seeder/seeder.service';
 import { ValidationPipe } from '@nestjs/common';
 import  cookieParser from 'cookie-parser';
 import * as express from 'express';
+import {CustomExceptionFilter} from 'exception-filter/exception-filter'
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  
+  app.useGlobalFilters(new CustomExceptionFilter());
   app.use(cookieParser());
   app.useGlobalPipes(new ValidationPipe());
   app.enableCors()

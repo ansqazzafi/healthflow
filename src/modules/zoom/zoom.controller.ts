@@ -6,11 +6,11 @@ import { SuccessHandler } from 'interfaces/success-handler.interface';
 export class ZoomController {
   constructor(private readonly zoomService: ZoomService) {}
 
-  @Get('create-meeting')
-  async createMeeting(): Promise<SuccessHandler<any>> {
+  // @Get('create-meeting')
+  // async createMeeting(): Promise<SuccessHandler<any>> {
 
-    // Create the meeting
-    const meetingDetails = await this.zoomService.createMeeting();
-    return meetingDetails
-  }
+  //   // Create the meeting
+  //   const meetingDetails = await this.zoomService.createMeeting();
+  //   return meetingDetails
+  // }
 }
