@@ -49,7 +49,7 @@ export class StripeService {
     }
   }
 
-  public async updations(paymentIntend): Promise<any> {
+  public async updationsAfterPaymentCompleted(paymentIntend): Promise<any> {
     const { appointment_id, doctor_id, hospital_id, patient_id } =
       paymentIntend.metadata;
     const transactionDate = new Date(paymentIntend.created * 1000);

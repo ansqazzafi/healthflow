@@ -44,7 +44,7 @@ export class StripeController {
       case 'payment_intent.succeeded':
         console.log("Entered into payment intent succeeded");
         const paymentIntent = event.data.object as Stripe.PaymentIntent;
-        await this.stripeService.updations(paymentIntent)
+        await this.stripeService.updationsAfterPaymentCompleted(paymentIntent)
         this.logger.log(`PaymentIntent ${paymentIntent.id} was successful!`);
         break;
 
