@@ -1,12 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login</title>
 </head>
+
 <body>
-    <div style="max-width: 300px; margin: 50px auto; padding: 20px; border: 1px solid #ccc; border-radius: 8px; background-color: #f9f9f9;">
+    <div
+        style="max-width: 300px; margin: 50px auto; padding: 20px; border: 1px solid #ccc; border-radius: 8px; background-color: #f9f9f9;">
         <h2>Login</h2>
         <button onclick="login()">Login</button>
     </div>
@@ -18,7 +21,7 @@
             // Hardcoded login data
             const loginData = {
                 role: "patient",
-                email: "ansqazzafi10@gmail.com",
+                email: "ansqazzafi@gmail.com",
                 password: "111111111"
             };
 
@@ -27,7 +30,7 @@
                 .then(response => {
                     // Check if the response contains access and refresh tokens
                     const { accessToken, refreshToken, patient } = response.data.data;
-                    
+
                     // Save the tokens in localStorage
                     localStorage.setItem('accessToken', accessToken); // Save access token
                     localStorage.setItem('refreshToken', refreshToken); // Save refresh token
@@ -49,4 +52,5 @@
         }
     </script>
 </body>
+
 </html>

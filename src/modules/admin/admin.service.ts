@@ -3,16 +3,12 @@ import { InjectModel } from '@nestjs/mongoose';
 import { User, UserDocument } from '../user/user.schema';
 import { Model } from 'mongoose';
 import { CustomError } from 'utility/custom-error';
-import { JwtService } from '@nestjs/jwt';
 import { UpdateAdminDTO } from './DTO/updatedto copy';
-import { TwilioService } from '../twilio/twilio.service';
 import { NodemailerService } from 'src/modules/nodemailer/nodemailer.service';
 @Injectable()
 export class AdminService {
   constructor(
     @InjectModel(User.name) private userModel: Model<UserDocument>,
-    private readonly jwtService: JwtService,
-    private readonly twilioService: TwilioService,
     private readonly nodemailerService: NodemailerService,
   ) { }
 
@@ -36,7 +32,6 @@ export class AdminService {
 
   public async updateProfile(id, updateDto: UpdateAdminDTO): Promise<any> {
     try {
-      console.log(updateDto, 'ffff');
       const updatedPatient = await this.userModel
         .findByIdAndUpdate(id, { $set: updateDto }, { new: true })
         .select(
