@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, OnModuleInit } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { TwilioService } from './modules/twilio/twilio.service';
@@ -61,4 +61,8 @@ import { ZoomModule } from './modules/zoom/zoom.module';
   providers: [ResponseHandler, SeederService, DepartmentService, NodemailerService, ZoomService],
   controllers: [ZoomController]
 })
-export class AppModule { }
+export class AppModule implements OnModuleInit {
+  async onModuleInit() {
+    console.log("App Module Initialized");
+  }
+}
