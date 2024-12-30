@@ -76,13 +76,13 @@ export class AuthService {
 
 
   public async login(LoginDto: LoginInDTO): Promise<any> {
-    const { role, ...LoginDetails } = LoginDto;
+    const {...LoginDetails } = LoginDto;
     if (!LoginDetails.email || !LoginDetails.password) {
       throw new CustomError('Email and password are required', 400);
     }
     const user = await this.userModel.findOne({ email: LoginDetails.email });
     if (!user) {
-      throw new CustomError(`${role} login failed`, 404);
+      throw new CustomError(`User login failed`, 404);
     }
     if (user.isActive === false) {
       throw new CustomError(`Please wait for Account verification`, 404);
@@ -100,7 +100,7 @@ export class AuthService {
     const newUser = user.toObject();
     const loggedInUser = this.removeFields(newUser, ['password', 'refreshToken']);
     return {
-      [`${role}`]: loggedInUser,
+      user: loggedInUser,
       accessToken,
       refreshToken,
     };
