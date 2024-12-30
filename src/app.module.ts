@@ -29,6 +29,7 @@ import { StripeModule } from './modules/stripe/stripe.module';
 import { ZoomService } from './modules/zoom/zoom.service';
 import { ZoomController } from './modules/zoom/zoom.controller';
 import { ZoomModule } from './modules/zoom/zoom.module';
+import { AppController } from './app.controller';
 
 
 @Module({
@@ -40,9 +41,6 @@ import { ZoomModule } from './modules/zoom/zoom.module';
     MongooseModule.forRoot(process.env.MONGODB_URI),
     MongooseModule.forFeature([{ name: Appointment.name, schema: AppointmentSchema }]),
     MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
-    ServeStaticModule.forRoot({
-      rootPath: join(__dirname, '..', 'public'),
-    }),
     ChatbotModule,
     AuthModule,
     TwilioModule,
@@ -56,10 +54,10 @@ import { ZoomModule } from './modules/zoom/zoom.module';
     NodemailerModule,
     NodemailerModule,
     StripeModule,
-    ZoomModule
+    ZoomModule,
   ],
   providers: [ResponseHandler, SeederService, DepartmentService, NodemailerService, ZoomService],
-  controllers: [ZoomController]
+  controllers: [AppController,ZoomController]
 })
 export class AppModule implements OnModuleInit {
   async onModuleInit() {
