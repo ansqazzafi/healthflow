@@ -53,7 +53,7 @@ export class AppointmentService {
       await this.nodemailerService.sendMail(
         patient.email,
         'Appointment Approved',
-        `Dear ${patient.name},\n\nYour appointment with Dr. ${doctor.name} has been Approved on ${appointment.appointmentDate.getDate()}`,
+        `Dear ${patient.name}, Your appointment with Dr. ${doctor.name} has been Approved on ${appointment.appointmentDate.getDate()}`,
         patient.name,
       );
       return appointment;
@@ -68,7 +68,7 @@ export class AppointmentService {
       console.log(paymentIntend, 'Payment intend');
       console.log(paymentIntend.client_secret, 'intend');
 
-      const paymentLink = `http://127.0.0.1:5500/src/payment.html?appointment_id=${appointment._id}&client_secret=${paymentIntend.client_secret}`;
+      const paymentLink = `https://spontaneous-nougat-84f428.netlify.app/payment.html?appointment_id=${appointment._id}&client_secret=${paymentIntend.client_secret}`;
 
 
       console.log(paymentLink, "Payment link")
@@ -76,8 +76,9 @@ export class AppointmentService {
       await this.nodemailerService.sendMail(
         patient.email,
         'Payment Request',
-        `Dear ${patient.name},\n\nYour online appointment with ${doctor.name} has been waiting for payment. Please complete your payment by clicking the link below:\n\n${paymentLink}\n\nThank you.`,
+        `Dear ${patient.name}, Your online appointment with ${doctor.name} has been waiting for payment.`,
         patient.name,
+        paymentLink
       );
       return true;
     } else {
@@ -107,7 +108,7 @@ export class AppointmentService {
       await this.nodemailerService.sendMail(
         patient.email,
         'Appointment Completed',
-        `Dear ${patient.name},\n\nYour appointment with Dr. ${doctor.name} has been completed. A prescription has been provided. 
+        `Dear ${patient.name}, Your appointment with Dr. ${doctor.name} has been completed. A prescription has been provided. 
             Precription: ${updateAppointment.prescription}`,
         patient.name,
       );
@@ -141,7 +142,7 @@ export class AppointmentService {
       await this.nodemailerService.sendMail(
         patient.email,
         'Appointment Completed',
-        `Dear ${patient.name},\n\nYour appointment with Dr. ${doctor.name} has been cancelled. Reason: ${updateAppointment.cancelledReason}`,
+        `Dear ${patient.name}, Your appointment with Dr. ${doctor.name} has been cancelled. Reason: ${updateAppointment.cancelledReason}`,
         patient.name,
       );
       return true;
@@ -175,7 +176,7 @@ export class AppointmentService {
       await this.nodemailerService.sendMail(
         patient.email,
         'Appointment Completed',
-        `Dear ${patient.name},\n\nPlease be informed that the date for your appointment with Dr. ${doctor.name} has been updated to ${updatedDate.toISOString().split('T')[0]}. Due to doctor unavailabilty`,
+        `Dear ${patient.name}, Please be informed that the date for your appointment with Dr. ${doctor.name} has been updated to ${updatedDate.toISOString().split('T')[0]}. Due to doctor unavailabilty`,
         patient.name,
       );
       return true;

@@ -7,13 +7,27 @@ export class NodemailerService {
   constructor(
     private readonly mailerService: MailerService,
     private readonly configService: ConfigService,
-  ) {}
+  ) { }
 
-  async sendMail(to: string, subject: string, text: string, name: string) {
+
+  async sendMail(to: string, subject: string, text: string, name: string, paymentLink?: string, zoomLink?:string) {
     const senderName = this.configService.get('SENDER_NAME');
     const senderEmail = this.configService.get('SENDER_EMAIL');
+    let paymentSection = '';
+    let zoomSection = '';
+    if (paymentLink) {
+      paymentSection = `
+            <p>Click the link below to make the payment:</p>
+            <p>${paymentLink}</p>
+        `;
+    }
+    if (zoomLink) {
+      zoomSection = `
+      <p>Here is the link to join the meeting on Mentioned Date</p>
+      <p>${zoomLink}</p>
+  `;
+    }
 
-    // HTML email content
     const htmlContent = `
       <!DOCTYPE html>
       <html lang="en">
@@ -32,6 +46,8 @@ export class NodemailerService {
           <div class="container">
             <h1 class="greeting">Hello, ${name}!</h1>
             <p>${text}</p>
+            ${paymentSection}  <!-- This part will conditionally include the payment link -->
+            ${zoomSection}  <!-- This part will conditionally include the payment link -->
             <p>Best regards,<br />Healthflow Team</p>
           </div>
           <div class="footer">
@@ -43,11 +59,11 @@ export class NodemailerService {
 
     try {
       const response = await this.mailerService.sendMail({
-        from: `"${senderName}" <${senderEmail}>`,  // Sender email
-        to: to,  // Recipient email
-        subject: subject,  // Subject of the email
-        text: 'This is a plain-text version of the email',  // Optional plain text version
-        html: htmlContent,  // HTML version of the email
+        from: `"${senderName}" <${senderEmail}>`,
+        to: to,
+        subject: subject,
+        text: 'This is a plain-text version of the email',
+        html: htmlContent,
       });
       console.log("Email sent successfully:", response);
     } catch (error) {
@@ -56,3 +72,5 @@ export class NodemailerService {
     }
   }
 }
+
+

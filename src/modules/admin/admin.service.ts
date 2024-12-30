@@ -23,7 +23,7 @@ export class AdminService {
     }
     user.isActive = true;
     const updateUser = await user.save();
-    await this.nodemailerService.sendMail(user.email, "Account Activated", `Congragulation Your Account corresponding ${user.email} at HealthFlow are Activated Successfully, Now you can login your account`, user.name)
+    await this.nodemailerService.sendMail(user.email, "Account Activated", `Congragulation, Your Account corresponding ${user.email} at HealthFlow are Activated Successfully. Now you can login your account`, user.name)
     if (updateUser.isActive !== true) {
       throw new CustomError("Unable to verify account")
     }
