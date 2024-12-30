@@ -63,7 +63,7 @@ export class AuthService {
       });
       console.log("new User", newUser);
       await newUser.save();
-      await this.nodemailerService.sendMail(newUser.email, "Confirmation", "Thanks for Registering in HealthFlow. Please wait for account verification.", newUser.name)
+      await this.nodemailerService.sendMail(newUser.email, "Confirmation", "Thanks for Registering in HealthFlow.Please wait for account verification.", newUser.name)
       console.log("saved");
       return true;
 

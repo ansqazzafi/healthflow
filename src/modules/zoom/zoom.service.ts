@@ -54,7 +54,8 @@ export class ZoomService {
       const responseData = {
         id: response.data.id,
         password: response.data.password,
-        join_url: response.data.join_url
+        join_url: response.data.join_url,
+        date:response.data.start_time
       }
 
       return responseData;

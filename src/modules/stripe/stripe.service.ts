@@ -4,6 +4,7 @@ import { AppointmentService } from '../appointment/appointment.service';
 import { NodemailerService } from '../nodemailer/nodemailer.service';
 import { UserService } from '../user/user.service';
 import { ZoomService } from '../zoom/zoom.service';
+import { ConvertToDate } from 'utility/convert-to-date';
 
 @Injectable()
 export class StripeService {
@@ -62,28 +63,32 @@ export class StripeService {
         paymentIntend.id,
         transactionDate,
       );
+      const newDate = ConvertToDate(updatedAppoinmet.appointmentDate)
     const meetingCredentials = await this.zoomService.createMeeting(updatedAppoinmet.appointmentDate)
     console.log(meetingCredentials, "Meeting Credentials");
 
     await this.nodemailerService.sendMail(
       doctor.email,
       'Payment Approved',
-      `Dear ${doctor.name},\n\nThe appointment with ${patient.name} for doctor ${doctor.name} has been approved by Healthflow. ${patient.name} successfully completed their transaction for the online consultation.\n\nYour meeting URL is:\n${meetingCredentials.join_url}\n\nMeeting ID:\n${meetingCredentials.id}\nPassword:\n${meetingCredentials.password}\n\nThank you.`,
+      `Dear ${doctor.name},The appointment with ${patient.name} for doctor ${doctor.name} has been approved by Healthflow. ${patient.name} successfully completed their transaction for the online consultation.`,
       doctor.name,
+      meetingCredentials.join_url
     );
 
     await this.nodemailerService.sendMail(
       hospital.email,
       'Payment Approved',
-      `Hey ${hospital.name},\n\nThe appointment with ${patient.name} for doctor ${doctor.name} has been approved by Healthflow. ${patient.name} successfully completed their transaction for the online consultation.\n\nYour meeting URL is:\n${meetingCredentials.join_url}\n\nMeeting ID:\n${meetingCredentials.id}\nPassword:\n${meetingCredentials.password}\n\nThank you.`,
+      `Hey ${hospital.name},The appointment with ${patient.name} for doctor ${doctor.name} has been approved by Healthflow. ${patient.name} successfully completed their transaction for the online consultation.`,
       hospital.name,
+      meetingCredentials.join_url
     );
 
     await this.nodemailerService.sendMail(
       patient.email,
       'Appointment Approved',
-      `Dear ${patient.name},\n\nYour appointment with ${doctor.name} corresponding hospital ${hospital.name} has been approved by Healthflow.\n\nYour meeting URL is:\n${meetingCredentials.join_url}\n\nMeeting ID:\n${meetingCredentials.id}\nPassword:\n${meetingCredentials.password}\n\nThank you.`,
+      `Dear ${patient.name},\n\nYour appointment with ${doctor.name} corresponding hospital ${hospital.name} has been approved on ${newDate.toISOString().split('T')[0]}.`,
       patient.name,
+      meetingCredentials.join_url
     );
   }
 }
